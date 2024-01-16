@@ -1,7 +1,11 @@
-import 'package:call_monitor/database/model/contact_database_model.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
+
+/* *
+* Represents a contact with a boolean indicating whether it is selected or not.
+* */
 
 class ContactWithIsSelected {
-  final ContactDatabaseModel contact;
+  final Contact contact;
   final bool isSelected;
 
   ContactWithIsSelected(this.contact, this.isSelected);

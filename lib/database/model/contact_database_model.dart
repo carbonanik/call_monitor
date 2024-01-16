@@ -9,7 +9,11 @@ class ContactDatabaseModel {
   String displayName;
   String primaryPhoneNumber;
 
-  ContactDatabaseModel({required this.contactId, required this.displayName, required this.primaryPhoneNumber});
+  ContactDatabaseModel({
+    required this.contactId,
+    required this.displayName,
+    required this.primaryPhoneNumber,
+  });
 
   @override
   String toString() {

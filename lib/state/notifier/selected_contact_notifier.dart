@@ -1,5 +1,7 @@
 import 'package:call_monitor/database/model/contact_database_model.dart';
 import 'package:call_monitor/database/provider/contact_database_provider.dart';
+import 'package:call_monitor/util/contact_ext.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SelectedContactNotifier extends StateNotifier<List<ContactDatabaseModel>> {
@@ -8,25 +10,39 @@ class SelectedContactNotifier extends StateNotifier<List<ContactDatabaseModel>> 
   SelectedContactNotifier({required Ref ref})
       : _ref = ref,
         super([]) {
-    // final data = _ref.read(contactDatabaseProvider);
-    // print(data);
-    // if (data is AsyncData) {
-    //   addMultiple(data.value ?? []);
-    // }
+    // ? INITIALLY LOAD CONTACT FROM DATABASE
+    final data = _ref.read(contactDatabaseProvider);
+    if (data is AsyncData) {
+      addMultiple(data.value ?? []);
+    }
   }
 
+  // ? ADD CONTACT TO SELECTED LIST
   void addContact(ContactDatabaseModel contact) {
     state = [...state, contact];
   }
 
+  // ? REMOVE CONTACT FROM SELECTED LIST
   void removeContact(ContactDatabaseModel contact) {
     state = state.where((c) => c != contact).toList();
   }
 
+  // ? TOGGLE IF CONTACT IS IN SELECTED LIST
+  void toggle(Contact contact) {
+    final selectedContact = state.where((element) => element.contactId == contact.id).firstOrNull;
+    if (selectedContact != null) {
+      removeContact(selectedContact);
+    } else {
+      addContact(contact.toDatabaseModel());
+    }
+  }
+
+  // ? CLEAR ALL SELECTED CONTACT
   void clear() {
     state = [];
   }
 
+  // ? ADD MULTIPLE CONTACT TO SELECTED LIST
   void addMultiple(List<ContactDatabaseModel> contacts) {
     if (contacts.isEmpty) return;
     clear();

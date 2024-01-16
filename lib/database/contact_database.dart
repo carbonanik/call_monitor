@@ -68,6 +68,14 @@ class ContactDatabase extends StateNotifier<AsyncValue<List<ContactDatabaseModel
     readDatabaseContact();
   }
 
+  // D E L E T E -- delete multiple contacts
+  Future<void> deleteMultipleContact(List<int> ids) async {
+    await isar.writeTxn(() async {
+      await isar.contactDatabaseModels.deleteAll(ids);
+    });
+    readDatabaseContact();
+  }
+
   //U P D A T E -- edit contact
   //Future<void> updateContact(int id, DatabaseContact contact) async {
   //  await isar.writeTxn(() async {

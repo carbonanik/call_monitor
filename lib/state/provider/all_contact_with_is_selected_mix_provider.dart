@@ -6,18 +6,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final filteredContactWithIsSelectedMixProvider = Provider<AsyncValue<List<ContactWithIsSelected>>>(
   (ref) {
+    // ? GET SEARCH TEXT
     final text = ref.watch(contactSearchTextProvider);
+    // ? GET ALL CONTACT AS ASYNC_VALUE
     final allContactsAsyncValue = ref.watch(allContactProvider);
+    // ? GET SELECTED CONTACT
     final selectedContacts = ref.watch(selectedContactProvider);
 
+    // ? FILTER CONTACT
     return allContactsAsyncValue.when(
       data: (data) {
         return AsyncData(
           data.where((contact) {
+            // ? FILTER BY SEARCH TEXT
             return contact.displayName.toLowerCase().contains(text.toLowerCase());
-          }).map((c) {
-            final isSelected = selectedContacts.contains(c);
-            return ContactWithIsSelected(c, isSelected);
+          }).map((contact) {
+            // ? CHECK IF CONTACT IS SELECTED
+            final isSelected = selectedContacts.where((selected) => selected.contactId == contact.id).isNotEmpty;
+            // ? RETURN CONTACT_WITH_IS_SELECTED
+            return ContactWithIsSelected(contact, isSelected);
           }).toList(),
         );
       },
