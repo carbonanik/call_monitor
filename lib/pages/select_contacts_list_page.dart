@@ -128,16 +128,49 @@ class _SelectContactListPageState extends State<SelectContactListPage> {
   }
 
   void _onSavePressed(WidgetRef ref) {
+    /// ? GET ALL CONTACT CURRENTLY SELECTED
     final selectedContact = ref.read(selectedContactProvider);
-    if (selectedContact.isEmpty) return;
+
+    /// ? GET ALL CONTACT CURRENTLY IN DATABASE
     final databaseContacts = ref.read(contactDatabaseProvider).valueOrNull;
-    if (databaseContacts == null || databaseContacts.isEmpty) return;
 
-    final contactsToAdd = selectedContact.where((element) => !databaseContacts.contains(element)).toList();
-    final contactsToRemove = databaseContacts.where((element) => !selectedContact.contains(element)).toList();
+    /// ? CONTACT THAT IS SELECTED BUT NOT IN DATABASE
+    /// we have to save the newly selected to database
+    final contactsToAdd = selectedContact
+        .where(
+          (selected) => !(databaseContacts
+                  ?.where(
+                    (fromDatabase) => selected.contactId == fromDatabase.contactId,
+                  )
+                  .isNotEmpty ??
+              false),
+        )
+        .toList();
+    print("add -> ${contactsToAdd.map((e) => e.displayName)}");
 
-    ref.read(contactDatabaseProvider.notifier).addMultipleDatabaseContact(contactsToAdd);
-    ref.read(contactDatabaseProvider.notifier).deleteMultipleContact(contactsToRemove.map((e) => e.id).toList());
+    /// ? CONTACT THAT IS IN DATABASE BUT NOT SELECTED
+    /// we have to remove the deselected from database
+    final contactsToRemove = databaseContacts
+            ?.where(
+              (fromDatabase) => !selectedContact
+                  .where(
+                    (selected) => fromDatabase.contactId == selected.contactId,
+                  )
+                  .isNotEmpty,
+            )
+            .toList() ??
+        [];
+    print("remove -> ${contactsToRemove.map((e) => e.displayName)}");
+
+    /// ? SAVE TO DATABASE
+    if (contactsToAdd.isNotEmpty) {
+      ref.read(contactDatabaseProvider.notifier).addMultipleDatabaseContact(contactsToAdd);
+    }
+
+    /// ? REMOVE FROM DATABASE
+    if (contactsToRemove.isNotEmpty) {
+      ref.read(contactDatabaseProvider.notifier).deleteMultipleContact(contactsToRemove.map((e) => e.id).toList());
+    }
   }
 
   void _onContactItemTapped(Contact contact, WidgetRef ref) {

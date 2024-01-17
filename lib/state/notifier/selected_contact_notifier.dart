@@ -33,7 +33,11 @@ class SelectedContactNotifier extends StateNotifier<List<ContactDatabaseModel>> 
     if (selectedContact != null) {
       removeContact(selectedContact);
     } else {
-      addContact(contact.toDatabaseModel());
+      final contactInDatabase = _ref
+          .read(contactDatabaseProvider)
+          .whenData((value) => value.where((element) => element.contactId == contact.id).firstOrNull)
+          .valueOrNull;
+      addContact(contactInDatabase ?? contact.toDatabaseModel());
     }
   }
 
