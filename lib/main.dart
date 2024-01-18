@@ -1,4 +1,5 @@
 import 'package:call_monitor/database/contact_database.dart';
+import 'package:call_monitor/pages/timeline_view_page.dart';
 import 'package:call_monitor/pages/currently_tracked_contact_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const CurrentlyTrackedContactPage(),
+      home: CurrentlyTrackedContactPage(),
     );
   }
 }

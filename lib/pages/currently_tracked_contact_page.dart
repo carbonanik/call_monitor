@@ -1,6 +1,7 @@
 import 'package:call_monitor/database/model/contact_database_model.dart';
 import 'package:call_monitor/database/provider/contact_database_provider.dart';
 import 'package:call_monitor/pages/select_contacts_list_page.dart';
+import 'package:call_monitor/pages/timeline_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -72,6 +73,18 @@ class CurrentlyTrackedContactPage extends StatelessWidget {
         tileColor: Theme.of(context).colorScheme.primaryContainer,
         title: Text(contact.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(contact.primaryPhoneNumber),
+        onTap: () {
+          _onContactTapped(context, contact.primaryPhoneNumber);
+        },
+      ),
+    );
+  }
+
+  void _onContactTapped(BuildContext context, String number) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TimelineViewPage(number: number),
       ),
     );
   }
