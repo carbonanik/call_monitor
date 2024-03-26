@@ -1,6 +1,6 @@
-import 'package:call_monitor/database/contact_database.dart';
-import 'package:call_monitor/pages/timeline_view_page.dart';
-import 'package:call_monitor/pages/currently_tracked_contact_page.dart';
+import 'package:call_monitor/database/app_settings_database.dart';
+import 'package:call_monitor/database/database.dart';
+import 'package:call_monitor/pages/track_group_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,8 +8,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // initialize database
-  await ContactDatabase.initialize();
-  await ContactDatabase().saveFirstLaunchDate();
+  await IsarDatabase.initialize();
+  await AppSettingsDatabase().saveFirstLaunchDate();
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: CurrentlyTrackedContactPage(),
+      home: const TrackGroupList(),
     );
   }
 }

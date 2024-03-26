@@ -17,6 +17,21 @@ class CallLogsDataSource {
     return entries.toList();
   }
 
+  Future<List<CallLogEntry>> getCallLogsByNumbers(List<String> numbers) async {
+    final to = DateTime.now();
+    final from = to.subtract(const Duration(days: 30));
+    var entries = await Future.wait(
+      numbers.map(
+        (number) => CallLog.query(
+          dateFrom: from.millisecondsSinceEpoch,
+          dateTo: to.millisecondsSinceEpoch,
+          number: number,
+        ),
+      ),
+    );
+    return entries.expand((i) => i).toList();
+  }
+
 // void callbackDispatcher() {
 //   Workmanager().executeTask((dynamic task, dynamic inputData) async {
 //     print('Background Services are Working!');

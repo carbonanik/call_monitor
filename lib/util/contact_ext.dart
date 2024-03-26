@@ -6,7 +6,7 @@ extension ContactExt on Contact {
     return ContactDatabaseModel(
       contactId: id,
       displayName: displayName,
-      primaryPhoneNumber: phones.firstOrNull?.number ?? '',
+      phoneNumbers: phones.map((e) => e.number).toList(),
     );
   }
 }

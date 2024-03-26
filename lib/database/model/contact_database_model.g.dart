@@ -28,10 +28,10 @@ const ContactDatabaseModelSchema = CollectionSchema(
       name: r'displayName',
       type: IsarType.string,
     ),
-    r'primaryPhoneNumber': PropertySchema(
+    r'phoneNumbers': PropertySchema(
       id: 2,
-      name: r'primaryPhoneNumber',
-      type: IsarType.string,
+      name: r'phoneNumbers',
+      type: IsarType.stringList,
     )
   },
   estimateSize: _contactDatabaseModelEstimateSize,
@@ -56,7 +56,13 @@ int _contactDatabaseModelEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.contactId.length * 3;
   bytesCount += 3 + object.displayName.length * 3;
-  bytesCount += 3 + object.primaryPhoneNumber.length * 3;
+  bytesCount += 3 + object.phoneNumbers.length * 3;
+  {
+    for (var i = 0; i < object.phoneNumbers.length; i++) {
+      final value = object.phoneNumbers[i];
+      bytesCount += value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -68,7 +74,7 @@ void _contactDatabaseModelSerialize(
 ) {
   writer.writeString(offsets[0], object.contactId);
   writer.writeString(offsets[1], object.displayName);
-  writer.writeString(offsets[2], object.primaryPhoneNumber);
+  writer.writeStringList(offsets[2], object.phoneNumbers);
 }
 
 ContactDatabaseModel _contactDatabaseModelDeserialize(
@@ -80,7 +86,7 @@ ContactDatabaseModel _contactDatabaseModelDeserialize(
   final object = ContactDatabaseModel(
     contactId: reader.readString(offsets[0]),
     displayName: reader.readString(offsets[1]),
-    primaryPhoneNumber: reader.readString(offsets[2]),
+    phoneNumbers: reader.readStringList(offsets[2]) ?? [],
   );
   object.id = id;
   return object;
@@ -98,7 +104,7 @@ P _contactDatabaseModelDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -534,13 +540,13 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberEqualTo(
+      QAfterFilterCondition> phoneNumbersElementEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -548,7 +554,7 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberGreaterThan(
+      QAfterFilterCondition> phoneNumbersElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -556,7 +562,7 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -564,7 +570,7 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberLessThan(
+      QAfterFilterCondition> phoneNumbersElementLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -572,7 +578,7 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -580,7 +586,7 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberBetween(
+      QAfterFilterCondition> phoneNumbersElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -589,7 +595,7 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -600,13 +606,13 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberStartsWith(
+      QAfterFilterCondition> phoneNumbersElementStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -614,13 +620,13 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberEndsWith(
+      QAfterFilterCondition> phoneNumbersElementEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -629,10 +635,10 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
           QAfterFilterCondition>
-      primaryPhoneNumberContains(String value, {bool caseSensitive = true}) {
+      phoneNumbersElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -641,10 +647,10 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
           QAfterFilterCondition>
-      primaryPhoneNumberMatches(String pattern, {bool caseSensitive = true}) {
+      phoneNumbersElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -652,22 +658,111 @@ extension ContactDatabaseModelQueryFilter on QueryBuilder<ContactDatabaseModel,
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberIsEmpty() {
+      QAfterFilterCondition> phoneNumbersElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: '',
       ));
     });
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
-      QAfterFilterCondition> primaryPhoneNumberIsNotEmpty() {
+      QAfterFilterCondition> phoneNumbersElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'primaryPhoneNumber',
+        property: r'phoneNumbers',
         value: '',
       ));
+    });
+  }
+
+  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
+      QAfterFilterCondition> phoneNumbersLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'phoneNumbers',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
+      QAfterFilterCondition> phoneNumbersIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'phoneNumbers',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
+      QAfterFilterCondition> phoneNumbersIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'phoneNumbers',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
+      QAfterFilterCondition> phoneNumbersLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'phoneNumbers',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
+      QAfterFilterCondition> phoneNumbersLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'phoneNumbers',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel,
+      QAfterFilterCondition> phoneNumbersLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'phoneNumbers',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 }
@@ -705,20 +800,6 @@ extension ContactDatabaseModelQuerySortBy
       sortByDisplayNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'displayName', Sort.desc);
-    });
-  }
-
-  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel, QAfterSortBy>
-      sortByPrimaryPhoneNumber() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'primaryPhoneNumber', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel, QAfterSortBy>
-      sortByPrimaryPhoneNumberDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'primaryPhoneNumber', Sort.desc);
     });
   }
 }
@@ -766,20 +847,6 @@ extension ContactDatabaseModelQuerySortThenBy
       return query.addSortBy(r'id', Sort.desc);
     });
   }
-
-  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel, QAfterSortBy>
-      thenByPrimaryPhoneNumber() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'primaryPhoneNumber', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ContactDatabaseModel, ContactDatabaseModel, QAfterSortBy>
-      thenByPrimaryPhoneNumberDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'primaryPhoneNumber', Sort.desc);
-    });
-  }
 }
 
 extension ContactDatabaseModelQueryWhereDistinct
@@ -799,10 +866,9 @@ extension ContactDatabaseModelQueryWhereDistinct
   }
 
   QueryBuilder<ContactDatabaseModel, ContactDatabaseModel, QDistinct>
-      distinctByPrimaryPhoneNumber({bool caseSensitive = true}) {
+      distinctByPhoneNumbers() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'primaryPhoneNumber',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'phoneNumbers');
     });
   }
 }
@@ -829,10 +895,10 @@ extension ContactDatabaseModelQueryProperty on QueryBuilder<
     });
   }
 
-  QueryBuilder<ContactDatabaseModel, String, QQueryOperations>
-      primaryPhoneNumberProperty() {
+  QueryBuilder<ContactDatabaseModel, List<String>, QQueryOperations>
+      phoneNumbersProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'primaryPhoneNumber');
+      return query.addPropertyName(r'phoneNumbers');
     });
   }
 }

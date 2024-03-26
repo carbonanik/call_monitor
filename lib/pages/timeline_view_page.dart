@@ -3,24 +3,70 @@ import 'package:call_monitor/component/my_timeline_tile.dart';
 import 'package:call_monitor/component/timeline_card_date_view.dart';
 import 'package:call_monitor/component/timeline_card_duration_view.dart';
 import 'package:call_monitor/data_source/call_logs/provider/call_logs_provider.dart';
+import 'package:call_monitor/database/provider/contact_database_provider.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:svg_flutter/svg.dart';
 
 class TimelineViewPage extends StatelessWidget {
-  final String number;
+  final int trackGroupId;
 
-  const TimelineViewPage({required this.number, super.key});
+  const TimelineViewPage({required this.trackGroupId, super.key});
+
+  void handleClick(String value, BuildContext context) {
+    switch (value) {
+      case 'Set frequency':
+        setFrequency(context);
+        break;
+    }
+  }
+
+  void setFrequency(BuildContext context) async {
+    final frequencyController = TextEditingController();
+    final String? frequency = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return  setFrequencyDialog(frequencyController, context);
+      },
+    );
+
+    if (frequency != null) {
+
+    }
+  }
+
+  AlertDialog setFrequencyDialog(TextEditingController frequencyController, BuildContext context) {
+    return AlertDialog(
+        title: const Text('Set frequency in days'),
+        content: TextField(
+          decoration: const InputDecoration(
+            hintText: 'Frequency',
+          ),
+          controller: frequencyController,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, frequencyController.text);
+            },
+            child: const Text('Save'),
+          )
+        ]
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calender Activity'),
+        actions: [
+          _buildMenuOptions(context),
+        ],
       ),
       body: Consumer(builder: (context, ref, child) {
-        final logsAsyncValue = ref.watch(callLogsByNumberProvider(number));
+        final logsAsyncValue = ref.watch(callLogsByIdProvider(trackGroupId));
 
         return logsAsyncValue.maybeWhen(data: (logs) {
           /// ? get oldest log
@@ -78,6 +124,22 @@ class TimelineViewPage extends StatelessWidget {
         });
       }),
     );
+  }
+
+  PopupMenuButton<String> _buildMenuOptions(BuildContext context) {
+    return PopupMenuButton<String>(
+          onSelected:(value) =>  handleClick(value, context),
+          itemBuilder: (BuildContext context) {
+            return {
+              'Set frequency',
+            }.map((String choice) {
+              return PopupMenuItem<String>(
+                value: choice,
+                child: Text(choice),
+              );
+            }).toList();
+          },
+        );
   }
 
   Widget _buildCardDetails(List<DateTime> listDays, int index, bool isCompleted, Duration duration) {

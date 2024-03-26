@@ -42,9 +42,14 @@ class _SelectContactListPageState extends State<SelectContactListPage> {
             final showSearchBar = ref.watch(showSearchBarProvider);
             return IconButton(
               onPressed: () {
-                ref.read(showSearchBarProvider.notifier).state = !showSearchBar;
+                final searchText = ref.read(contactSearchTextProvider);
+                if (searchText.isNotEmpty) {
+                  _onClearTap(ref);
+                } else {
+                  ref.read(showSearchBarProvider.notifier).state = !showSearchBar;
+                }
               },
-              icon: const Icon(Icons.search),
+              icon: Icon(showSearchBar ? Icons.close : Icons.search),
             );
           },
         )
@@ -59,12 +64,6 @@ class _SelectContactListPageState extends State<SelectContactListPage> {
       return showSearchBar
           ? TextField(
               controller: searchController,
-              decoration: InputDecoration(
-                suffixIcon: IconButton(
-                  onPressed: () => _onClearTap(ref),
-                  icon: const Icon(Icons.clear),
-                ),
-              ),
               onChanged: (value) {
                 ref.read(contactSearchTextProvider.notifier).state = value;
               },
@@ -118,7 +117,7 @@ class _SelectContactListPageState extends State<SelectContactListPage> {
 
     asyncValue.whenData((value) {
       ref.read(selectedContactProvider.notifier).addMultiple(
-            value.map((e) => e.contact.toDatabaseModel()).toList(),
+            value.map((contactWithIsSelected) => contactWithIsSelected.contact).toList(),
           );
     });
   }
@@ -130,47 +129,48 @@ class _SelectContactListPageState extends State<SelectContactListPage> {
   void _onSavePressed(WidgetRef ref) {
     /// ? GET ALL CONTACT CURRENTLY SELECTED
     final selectedContact = ref.read(selectedContactProvider);
+    Navigator.pop(context);
 
-    /// ? GET ALL CONTACT CURRENTLY IN DATABASE
-    final databaseContacts = ref.read(contactDatabaseProvider).valueOrNull;
+    // /// ? GET ALL CONTACT CURRENTLY IN DATABASE
+    // final databaseContacts = ref.read(contactDatabaseProvider).valueOrNull;
 
-    /// ? CONTACT THAT IS SELECTED BUT NOT IN DATABASE
-    /// we have to save the newly selected to database
-    final contactsToAdd = selectedContact
-        .where(
-          (selected) => !(databaseContacts
-                  ?.where(
-                    (fromDatabase) => selected.contactId == fromDatabase.contactId,
-                  )
-                  .isNotEmpty ??
-              false),
-        )
-        .toList();
-    print("add -> ${contactsToAdd.map((e) => e.displayName)}");
-
-    /// ? CONTACT THAT IS IN DATABASE BUT NOT SELECTED
-    /// we have to remove the deselected from database
-    final contactsToRemove = databaseContacts
-            ?.where(
-              (fromDatabase) => !selectedContact
-                  .where(
-                    (selected) => fromDatabase.contactId == selected.contactId,
-                  )
-                  .isNotEmpty,
-            )
-            .toList() ??
-        [];
-    print("remove -> ${contactsToRemove.map((e) => e.displayName)}");
-
-    /// ? SAVE TO DATABASE
-    if (contactsToAdd.isNotEmpty) {
-      ref.read(contactDatabaseProvider.notifier).addMultipleDatabaseContact(contactsToAdd);
-    }
-
-    /// ? REMOVE FROM DATABASE
-    if (contactsToRemove.isNotEmpty) {
-      ref.read(contactDatabaseProvider.notifier).deleteMultipleContact(contactsToRemove.map((e) => e.id).toList());
-    }
+    // /// ? CONTACT THAT IS SELECTED BUT NOT IN DATABASE
+    // /// we have to save the newly selected to database
+    // final contactsToAdd = selectedContact
+    //     .where(
+    //       (selected) => !(databaseContacts
+    //               ?.where(
+    //                 (fromDatabase) => selected.contactId == fromDatabase.contactId,
+    //               )
+    //               .isNotEmpty ??
+    //           false),
+    //     )
+    //     .toList();
+    // print("add -> ${contactsToAdd.map((e) => e.displayName)}");
+    //
+    // /// ? CONTACT THAT IS IN DATABASE BUT NOT SELECTED
+    // /// we have to remove the deselected from database
+    // final contactsToRemove = databaseContacts
+    //         ?.where(
+    //           (fromDatabase) => !selectedContact
+    //               .where(
+    //                 (selected) => fromDatabase.contactId == selected.contactId,
+    //               )
+    //               .isNotEmpty,
+    //         )
+    //         .toList() ??
+    //     [];
+    // print("remove -> ${contactsToRemove.map((e) => e.displayName)}");
+    //
+    // /// ? SAVE TO DATABASE
+    // if (contactsToAdd.isNotEmpty) {
+    //   ref.read(contactDatabaseProvider.notifier).addMultipleDatabaseContact(contactsToAdd);
+    // }
+    //
+    // /// ? REMOVE FROM DATABASE
+    // if (contactsToRemove.isNotEmpty) {
+    //   ref.read(contactDatabaseProvider.notifier).deleteMultipleContact(contactsToRemove.map((e) => e.id).toList());
+    // }
   }
 
   void _onContactItemTapped(Contact contact, WidgetRef ref) {
@@ -207,8 +207,12 @@ class _SelectContactListPageState extends State<SelectContactListPage> {
   Widget _buildSelectableContactItem(Contact contact, bool isSelected, WidgetRef ref) {
     return ListTile(
       title: Text(contact.displayName),
-      subtitle: Text(
-        contact.phones.firstOrNull?.number ?? 'XXX',
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(
+          contact.phones.length,
+          (index) => Text(contact.phones[index].number),
+        ),
       ),
       leading: isSelected
           ? const Icon(Icons.check_box_rounded, color: Colors.green)
