@@ -1,8 +1,5 @@
-import 'package:call_monitor/database/model/contact_database_model.dart';
-import 'package:call_monitor/database/provider/contact_database_provider.dart';
 import 'package:call_monitor/database/provider/track_group_database_provider.dart';
 import 'package:call_monitor/pages/create_track_group.dart';
-import 'package:call_monitor/pages/select_contacts_list_page.dart';
 import 'package:call_monitor/pages/timeline_view_page.dart';
 import 'package:call_monitor/state/provider/all_device_contact_provider.dart';
 import 'package:flutter/material.dart';

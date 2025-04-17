@@ -3,7 +3,6 @@ import 'package:call_monitor/component/my_timeline_tile.dart';
 import 'package:call_monitor/component/timeline_card_date_view.dart';
 import 'package:call_monitor/component/timeline_card_duration_view.dart';
 import 'package:call_monitor/data_source/call_logs/provider/call_logs_provider.dart';
-import 'package:call_monitor/database/provider/contact_database_provider.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

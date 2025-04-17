@@ -1,9 +1,7 @@
-import 'package:call_monitor/database/provider/contact_database_provider.dart';
 import 'package:call_monitor/state/model/contact_with_is_selected.dart';
 import 'package:call_monitor/state/provider/all_contact_with_is_selected_mix_provider.dart';
 import 'package:call_monitor/state/provider/contact_search_text_provider.dart';
 import 'package:call_monitor/state/provider/selected_contact_provider.dart';
-import 'package:call_monitor/util/contact_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

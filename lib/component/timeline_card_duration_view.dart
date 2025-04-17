@@ -1,4 +1,3 @@
-import 'package:call_log/call_log.dart';
 import 'package:flutter/material.dart';
 
 class TimelineCardDurationView extends StatelessWidget {

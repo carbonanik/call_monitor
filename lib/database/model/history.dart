@@ -1,6 +1,5 @@
 import 'package:isar/isar.dart';
 
-import 'contact_database_model.dart';
 
 part 'history.g.dart';
 

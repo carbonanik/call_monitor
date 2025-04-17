@@ -4,7 +4,6 @@ import 'package:call_monitor/database/model/track_group.dart';
 import 'package:call_monitor/database/provider/track_group_database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../database/provider/contact_database_provider.dart';
 
 final callLogsProvider = FutureProvider<List<CallLogEntry>>(
   (ref) async {
