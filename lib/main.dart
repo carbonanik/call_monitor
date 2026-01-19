@@ -28,6 +28,10 @@ void main() async {
   const initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
 
   // initialize settings (Drift is lazy-initialized on first use)
   await AppSettingsDatabase().saveFirstLaunchDate();
