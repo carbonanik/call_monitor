@@ -26,16 +26,15 @@ class TimelineViewPage extends StatelessWidget {
     final String? frequency = await showDialog<String>(
       context: context,
       builder: (context) {
-        return  setFrequencyDialog(frequencyController, context);
+        return setFrequencyDialog(frequencyController, context);
       },
     );
 
-    if (frequency != null) {
-
-    }
+    if (frequency != null) {}
   }
 
-  AlertDialog setFrequencyDialog(TextEditingController frequencyController, BuildContext context) {
+  AlertDialog setFrequencyDialog(
+      TextEditingController frequencyController, BuildContext context) {
     return AlertDialog(
         title: const Text('Set frequency in days'),
         content: TextField(
@@ -51,8 +50,7 @@ class TimelineViewPage extends StatelessWidget {
             },
             child: const Text('Save'),
           )
-        ]
-      );
+        ]);
   }
 
   @override
@@ -65,11 +63,13 @@ class TimelineViewPage extends StatelessWidget {
         ],
       ),
       body: Consumer(builder: (context, ref, child) {
-        final logsAsyncValue = ref.watch(callLogsByIdProvider(trackGroupId));
+        final logsAsyncValue =
+            ref.watch(callLogsByTrackGroupIdProvider(trackGroupId));
 
         return logsAsyncValue.maybeWhen(data: (logs) {
           /// ? get oldest log
-          final oldestDate = DateTime.fromMillisecondsSinceEpoch(logs.lastOrNull?.timestamp ?? 0);
+          final oldestDate = DateTime.fromMillisecondsSinceEpoch(
+              logs.lastOrNull?.timestamp ?? 0);
           final today = DateTime.now();
 
           /// ? generate list of days from oldest to today
@@ -88,7 +88,8 @@ class TimelineViewPage extends StatelessWidget {
                     /// ? filter logs by date
                     /// ? gets all logs for the day ${listDays[index]}
                     final logInSameDay = logs.where((element) {
-                      final logDate = DateTime.fromMillisecondsSinceEpoch(element.timestamp ?? 0);
+                      final logDate = DateTime.fromMillisecondsSinceEpoch(
+                          element.timestamp ?? 0);
                       return isSameDay(logDate, listDays[index]);
                     }).toList();
 
@@ -103,7 +104,8 @@ class TimelineViewPage extends StatelessWidget {
                         isLast: index == 0,
                         isFirst: index == listDays.length - 1,
                         isCompleted: isCompleted,
-                        child: _buildCardDetails(listDays, index, isCompleted, duration),
+                        child: _buildCardDetails(
+                            listDays, index, isCompleted, duration),
                       ),
                     );
                   },
@@ -113,7 +115,8 @@ class TimelineViewPage extends StatelessWidget {
                     Assets.images.pulseAlert,
                     width: 200,
                     height: 200,
-                    colorFilter: ColorFilter.mode(Colors.grey.shade400, BlendMode.srcIn),
+                    colorFilter:
+                        ColorFilter.mode(Colors.grey.shade400, BlendMode.srcIn),
                   ),
                 );
         }, orElse: () {
@@ -127,21 +130,22 @@ class TimelineViewPage extends StatelessWidget {
 
   PopupMenuButton<String> _buildMenuOptions(BuildContext context) {
     return PopupMenuButton<String>(
-          onSelected:(value) =>  handleClick(value, context),
-          itemBuilder: (BuildContext context) {
-            return {
-              'Set frequency',
-            }.map((String choice) {
-              return PopupMenuItem<String>(
-                value: choice,
-                child: Text(choice),
-              );
-            }).toList();
-          },
-        );
+      onSelected: (value) => handleClick(value, context),
+      itemBuilder: (BuildContext context) {
+        return {
+          'Set frequency',
+        }.map((String choice) {
+          return PopupMenuItem<String>(
+            value: choice,
+            child: Text(choice),
+          );
+        }).toList();
+      },
+    );
   }
 
-  Widget _buildCardDetails(List<DateTime> listDays, int index, bool isCompleted, Duration duration) {
+  Widget _buildCardDetails(
+      List<DateTime> listDays, int index, bool isCompleted, Duration duration) {
     return Row(
       children: [
         TimelineCardDateView(date: listDays[index], isCompleted: isCompleted),
@@ -173,7 +177,9 @@ Duration _calculateDuration(List<CallLogEntry> logs) {
 }
 
 bool isSameDay(DateTime date1, DateTime date2) {
-  return date1.day == date2.day && date1.month == date2.month && date1.year == date2.year;
+  return date1.day == date2.day &&
+      date1.month == date2.month &&
+      date1.year == date2.year;
 }
 
 Icon iconFromCallType(CallType callType) {

@@ -1,55 +1,62 @@
-import 'package:call_monitor/database/database.dart';
-import 'package:call_monitor/database/model/contact_database_model.dart';
+import 'package:call_monitor/database/database_manager.dart';
+import 'package:call_monitor/database/drift_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
-class ContactDatabase extends StateNotifier<AsyncValue<List<ContactDatabaseModel>>> {
+class ContactDatabase extends StateNotifier<AsyncValue<List<Contact>>> {
   ContactDatabase() : super(const AsyncData([])) {
     readDatabaseContact();
   }
 
-  late Isar isar = IsarDatabase.isar;
+  final db = DatabaseManager.database;
 
   /// ? C R U D -- C O N T A C T
 
-  List<ContactDatabaseModel> contactList = [];
-
   // C R E A T E -- add a new contact
-  Future<void> addDatabaseContact(ContactDatabaseModel contact) async {
-    await isar.writeTxn(() => isar.contactDatabaseModels.put(contact));
+  Future<void> addDatabaseContact(Contact contact) async {
+    await db.insertContact(ContactsCompanion.insert(
+      contactId: contact.contactId,
+      displayName: contact.displayName,
+      phoneNumbers: contact.phoneNumbers,
+    ));
     readDatabaseContact();
   }
 
   // C R E A T E -- add multiple contacts
-  Future<void> addMultipleDatabaseContact(List<ContactDatabaseModel> contacts) async {
-    await isar.writeTxn(() => isar.contactDatabaseModels.putAll(contacts));
+  Future<void> addMultipleDatabaseContact(List<Contact> contacts) async {
+    await db.insertMultipleContacts(contacts
+        .map((c) => ContactsCompanion.insert(
+              contactId: c.contactId,
+              displayName: c.displayName,
+              phoneNumbers: c.phoneNumbers,
+            ))
+        .toList());
     readDatabaseContact();
   }
 
   // R E A D -- read saved contact form database
   Future<void> readDatabaseContact() async {
     state = const AsyncLoading();
-    state = AsyncData(await isar.contactDatabaseModels.where().findAll());
+    try {
+      final contactsList = await db.getAllContacts();
+      state = AsyncData(contactsList);
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+    }
   }
 
-  Future<ContactDatabaseModel?> getDatabaseContactById(int id) async {
-    final contact = await isar.contactDatabaseModels.where().idNotEqualTo(id).findFirst();
-    return contact;
+  Future<Contact?> getDatabaseContactById(int id) async {
+    return await db.getContactById(id);
   }
 
   // D E L E T E -- delete contact
   Future<void> deleteContact(int id) async {
-    await isar.writeTxn(() async {
-      await isar.contactDatabaseModels.delete(id);
-    });
+    await db.deleteContact(id);
     readDatabaseContact();
   }
 
   // D E L E T E -- delete multiple contacts
   Future<void> deleteMultipleContact(List<int> ids) async {
-    await isar.writeTxn(() async {
-      await isar.contactDatabaseModels.deleteAll(ids);
-    });
+    await db.deleteMultipleContacts(ids);
     readDatabaseContact();
   }
 }

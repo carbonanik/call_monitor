@@ -1,22 +1,23 @@
-import 'package:call_monitor/database/database.dart';
-import 'package:call_monitor/database/model/app_settings.dart';
-import 'package:isar/isar.dart';
+import 'package:call_monitor/database/database_manager.dart';
+import 'package:call_monitor/database/drift_database.dart';
+import 'package:drift/drift.dart';
 
 class AppSettingsDatabase {
-  final isar = IsarDatabase.isar;
+  final db = DatabaseManager.database;
 
   // save first date of the app startup
   Future<void> saveFirstLaunchDate() async {
-    final existingSettings = await isar.appSettings.where().findFirst();
+    final existingSettings = await db.getSettings();
     if (existingSettings == null) {
-      final settings = AppSettings()..firstLaunchDate = DateTime.now();
-      await isar.writeTxn(() => isar.appSettings.put(settings));
+      await db.insertSettings(AppSettingsCompanion.insert(
+        firstLaunchDate: Value(DateTime.now()),
+      ));
     }
   }
 
   // get first date of app startup
   Future<DateTime?> getFirstLaunchDate() async {
-    final settings = await isar.appSettings.where().findFirst();
+    final settings = await db.getSettings();
     return settings?.firstLaunchDate;
   }
 }

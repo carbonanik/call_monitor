@@ -1,36 +1,55 @@
-import 'package:call_monitor/database/model/contact_database_model.dart';
-import 'package:call_monitor/database/model/track_group.dart';
+import 'package:call_monitor/database/database_manager.dart';
+import 'package:call_monitor/database/drift_database.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
-
-import 'database.dart';
 
 class TrackGroupDatabase extends StateNotifier<AsyncValue<List<TrackGroup>>> {
   TrackGroupDatabase() : super(const AsyncData([])) {
     readTrackGroup();
   }
 
-  final Isar isar = IsarDatabase.isar;
+  final db = DatabaseManager.database;
 
   // ? C R U D -- T R A C K G R O U P
 
-  // C R E A T E -- add a new track group
-  // Future<void> addTrackGroup(TrackGroup trackGroup) async {
-  //   await isar.writeTxn(() => isar.trackGroups.put(trackGroup));
-  //   readTrackGroup();
-  // }
+  Future<void> addTrackGroupWithContact(
+      TrackGroup trackGroup, List<Contact> contacts) async {
+    await db.transaction(() async {
+      // Ensure contacts are in the database first
+      for (final contact in contacts) {
+        await db
+            .into(db.contacts)
+            .insertOnConflictUpdate(ContactsCompanion.insert(
+              contactId: contact.contactId,
+              displayName: contact.displayName,
+              phoneNumbers: contact.phoneNumbers,
+            ));
+      }
 
-  Future<void> addTrackGroupWithContact(TrackGroup trackGroup, List<ContactDatabaseModel> contacts) async {
-    trackGroup.contacts.addAll(contacts);
-    // contacts.map((e) {
-    //   isar.contactDatabaseModels.where().contactIdEqualTo(e.contactId).findFirst();
-    // });
-    print(trackGroup.contacts.length);
-    await isar.writeTxn(() async {
-      await isar.contactDatabaseModels.putAll(contacts);
-      await isar.trackGroups.put(trackGroup);
-      trackGroup.contacts.save();
-      readTrackGroup();
+      // Create the track group
+      final trackGroupId =
+          await db.into(db.trackGroups).insert(TrackGroupsCompanion.insert(
+                name: trackGroup.name,
+                frequency: Value(trackGroup.frequency),
+              ));
+
+      // Link contacts to the track group
+      for (final contact in contacts) {
+        // We need the internal ID of the contact. Since we inserted it above,
+        // we might need to fetch it if we don't have it.
+        // For simplicity, let's assume the contact objects passed in already have IDs
+        // OR we fetch them by contactId.
+        final dbContact = await (db.select(db.contacts)
+              ..where((t) => t.contactId.equals(contact.contactId)))
+            .getSingle();
+
+        await db
+            .into(db.trackGroupContacts)
+            .insert(TrackGroupContactsCompanion.insert(
+              trackGroupId: trackGroupId,
+              contactId: dbContact.id,
+            ));
+      }
     });
     readTrackGroup();
   }
@@ -38,18 +57,23 @@ class TrackGroupDatabase extends StateNotifier<AsyncValue<List<TrackGroup>>> {
   // R E A D -- read saved track group from database
   Future<void> readTrackGroup() async {
     state = const AsyncLoading();
-    final tracks = await isar.trackGroups.where().findAll();
-    state = AsyncData(tracks);
+    try {
+      final tracks = await db.getAllTrackGroups();
+      state = AsyncData(tracks);
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+    }
   }
 
   Future<TrackGroup?> getTrackGroupById(int id) async {
-    final contact = await isar.trackGroups.where().idEqualTo(id).findFirst();
-    return contact;
+    return await (db.select(db.trackGroups)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
   }
 
   // U P D A T E -- add contact to track group
-  Future<void> addContactToTrackGroup(TrackGroup trackGroup, ContactDatabaseModel contact) async {
-    trackGroup.contacts.add(contact);
-    await isar.writeTxn(() => isar.trackGroups.put(trackGroup));
+  Future<void> addContactToTrackGroup(
+      int trackGroupId, int contactInternalId) async {
+    await db.addContactToTrackGroup(trackGroupId, contactInternalId);
+    readTrackGroup();
   }
 }

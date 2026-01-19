@@ -5,7 +5,7 @@ import 'package:call_monitor/state/provider/all_device_contact_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../database/model/track_group.dart';
+import 'package:call_monitor/database/drift_database.dart';
 import '../state/provider/selected_contact_provider.dart';
 
 class TrackGroupList extends StatelessWidget {
@@ -28,7 +28,8 @@ class TrackGroupList extends StatelessWidget {
           return asyncValue.map(
             data: (tracks) => _buildList(tracks, ref),
             error: (error) => _buildListError(),
-            loading: (loading) => const Center(child: CircularProgressIndicator()),
+            loading: (loading) =>
+                const Center(child: CircularProgressIndicator()),
           );
         },
       ),
@@ -55,15 +56,13 @@ class TrackGroupList extends StatelessWidget {
   }
 
   Widget _buildFloatingAction(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child)  {
-        final allContacts = ref.watch(allDeviceContactProvider);
-        return FloatingActionButton(
-          onPressed: () => _onAddPress(context, ref),
-          child: const Icon(Icons.add),
-        );
-      }
-    );
+    return Consumer(builder: (context, ref, child) {
+      final allContacts = ref.watch(allDeviceContactProvider);
+      return FloatingActionButton(
+        onPressed: () => _onAddPress(context, ref),
+        child: const Icon(Icons.add),
+      );
+    });
   }
 
   void _onAddPress(BuildContext context, WidgetRef ref) {
@@ -77,18 +76,32 @@ class TrackGroupList extends StatelessWidget {
     );
   }
 
-  Widget _buildTrackItem(TrackGroup track, WidgetRef ref, BuildContext context) {
-    final numbers = track.numberList();
+  Widget _buildTrackItem(
+      TrackGroup track, WidgetRef ref, BuildContext context) {
+    // In Drift, relationships require a join or separate fetch.
+    // For simplicity in this view, we'll use a FutureBuilder or similar if we want to show numbers here.
+    // However, looking at the previous implementation, it used track.numberList().
+    // We'll update DatabaseManager to include a helper for this or use a Provider.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: ListTile(
         tileColor: Theme.of(context).colorScheme.primaryContainer,
-        title: Text(track.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          children: List.generate(
-            numbers.length,
-            (index) => Text(numbers[index]),
-          ),
+        title: Text(track.name,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: FutureBuilder<List<Contact>>(
+          future: ref
+              .read(trackGroupDatabaseProvider.notifier)
+              .db
+              .getContactsForTrackGroup(track.id),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const SizedBox.shrink();
+            final contacts = snapshot.data!;
+            final numbers = contacts.expand((c) => c.phoneNumbers).toList();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: numbers.map((n) => Text(n)).toList(),
+            );
+          },
         ),
         onTap: () {
           _onTrackTapped(context, track.id);

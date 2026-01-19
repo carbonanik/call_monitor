@@ -1,9 +1,7 @@
 import 'package:call_monitor/pages/select_contacts_list_page.dart';
-import 'package:call_monitor/util/contact_ext.dart';
+import 'package:call_monitor/database/drift_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../database/model/track_group.dart';
 import '../database/provider/track_group_database_provider.dart';
 import '../state/provider/selected_contact_provider.dart';
 
@@ -98,7 +96,9 @@ class _CreateTrackGroupState extends ConsumerState<CreateTrackGroup> {
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.close),
-                            onPressed: () => ref.read(selectedContactProvider.notifier).toggle(contact),
+                            onPressed: () => ref
+                                .read(selectedContactProvider.notifier)
+                                .toggle(contact),
                           ),
                           onTap: () {},
                         );
@@ -122,14 +122,27 @@ class _CreateTrackGroupState extends ConsumerState<CreateTrackGroup> {
                             if (!_formKey.currentState!.validate()) {
                               return;
                             }
-                            // Save track group
-                            final trackGroup = TrackGroup()
-                              ..name = _groupNameController.text
-                              ..frequency = int.tryParse(_frequencyController.text) ?? 0;
-                            // trackGroup.contacts.addAll(selectedContacts.map((e) => e.toDatabaseModel()));
-                            await ref.read(trackGroupDatabaseProvider.notifier).addTrackGroupWithContact(
-                                  trackGroup,
-                                  selectedContacts.map((e) => e.toDatabaseModel()).toList(),
+
+                            await ref
+                                .read(trackGroupDatabaseProvider.notifier)
+                                .addTrackGroupWithContact(
+                                  TrackGroup(
+                                    id: 0, // ID is auto-incremented, but we need a placeholder if we use the model class locally
+                                    name: _groupNameController.text,
+                                    frequency: int.tryParse(
+                                            _frequencyController.text) ??
+                                        0,
+                                  ),
+                                  selectedContacts
+                                      .map((e) => Contact(
+                                            id: 0,
+                                            contactId: e.id,
+                                            displayName: e.displayName,
+                                            phoneNumbers: e.phones
+                                                .map((p) => p.number)
+                                                .toList(),
+                                          ))
+                                      .toList(),
                                 );
                             // show confirmation
                             ScaffoldMessenger.of(context).showSnackBar(

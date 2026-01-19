@@ -1,8 +1,9 @@
-import 'package:call_monitor/database/model/track_group.dart';
+import 'package:call_monitor/database/drift_database.dart';
 import 'package:call_monitor/database/track_group_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final trackGroupDatabaseProvider = StateNotifierProvider<TrackGroupDatabase, AsyncValue<List<TrackGroup>>>(
+final trackGroupDatabaseProvider =
+    StateNotifierProvider<TrackGroupDatabase, AsyncValue<List<TrackGroup>>>(
   (ref) => TrackGroupDatabase(),
 );
 

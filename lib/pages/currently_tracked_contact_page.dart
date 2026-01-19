@@ -1,4 +1,4 @@
-import 'package:call_monitor/database/model/contact_database_model.dart';
+import 'package:call_monitor/database/drift_database.dart';
 import 'package:call_monitor/database/provider/contact_database_provider.dart';
 import 'package:call_monitor/pages/select_contacts_list_page.dart';
 import 'package:call_monitor/pages/timeline_view_page.dart';
@@ -24,7 +24,8 @@ class CurrentlyTrackedContactPage extends StatelessWidget {
           return asyncValue.map(
             data: (callLogData) => _buildList(callLogData, ref),
             error: (error) => _buildListError(),
-            loading: (loading) => const Center(child: CircularProgressIndicator()),
+            loading: (loading) =>
+                const Center(child: CircularProgressIndicator()),
           );
         },
       ),
@@ -40,7 +41,7 @@ class CurrentlyTrackedContactPage extends StatelessWidget {
     );
   }
 
-  Widget _buildList(AsyncData<List<ContactDatabaseModel>> callLogData, WidgetRef ref) {
+  Widget _buildList(AsyncData<List<Contact>> callLogData, WidgetRef ref) {
     return ListView.builder(
       itemBuilder: (context, index) {
         final contact = callLogData.value[index];
@@ -66,18 +67,19 @@ class CurrentlyTrackedContactPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContactItem(ContactDatabaseModel contact, WidgetRef ref, BuildContext context) {
+  Widget _buildContactItem(
+      Contact contact, WidgetRef ref, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: ListTile(
         tileColor: Theme.of(context).colorScheme.primaryContainer,
-        title: Text(contact.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(contact.displayName,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
-          children: List.generate(
-            contact.phoneNumbers.length,
-            (index) => Text(contact.phoneNumbers[index]),
-          )
-        ),
+            children: List.generate(
+          contact.phoneNumbers.length,
+          (index) => Text(contact.phoneNumbers[index]),
+        )),
         onTap: () {
           _onContactTapped(context, contact.id);
         },

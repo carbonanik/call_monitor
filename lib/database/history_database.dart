@@ -1,9 +1,8 @@
-import 'package:isar/isar.dart';
+import 'package:call_monitor/database/database_manager.dart';
 
-import 'database.dart';
+class HistoryDatabase {
+  final db = DatabaseManager.database;
 
-class ContactDatabase {
-
-  final Isar isar = IsarDatabase.isar;
-
+  // Basic implementation to satisfy existing structure
+  // Drift handles many operations directly through the database class
 }

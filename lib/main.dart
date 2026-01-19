@@ -1,5 +1,4 @@
 import 'package:call_monitor/database/app_settings_database.dart';
-import 'package:call_monitor/database/database.dart';
 import 'package:call_monitor/pages/track_group_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,8 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // initialize database
-  await IsarDatabase.initialize();
+  // initialize settings (Drift is lazy-initialized on first use)
   await AppSettingsDatabase().saveFirstLaunchDate();
   runApp(const ProviderScope(child: MyApp()));
 }
