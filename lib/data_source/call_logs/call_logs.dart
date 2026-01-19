@@ -51,8 +51,6 @@ void callbackDispatcher() {
       final groups = await db.getAllTrackGroups();
 
       for (final group in groups) {
-        _showNotification(group);
-        continue;
         final contacts = await db.getContactsForTrackGroup(group.id);
         final numbers = contacts.expand((c) => c.phoneNumbers).toList();
 
@@ -73,7 +71,24 @@ void callbackDispatcher() {
           final status = MonitorService.checkStatus(group, entries.toList());
 
           if (status == CommunicationStatus.overdue) {
-            _showNotification(group);
+            final now = DateTime.now();
+            final lastTime = group.lastNotificationTime;
+
+            // Frequency Cap: Max 1 per day
+            final alreadyNotifiedToday =
+                lastTime != null && now.difference(lastTime).inHours < 24;
+
+            if (!alreadyNotifiedToday) {
+              // Smart Timing: Check safe window (e.g. 8 AM - 9 PM) unless in debug
+              // For simplicity, let's assume valid time for now or we can check hour
+              final hour = now.hour;
+              final isSafeWindow = hour >= 8 && hour <= 21;
+
+              if (isSafeWindow) {
+                await _showNotification(group);
+                await db.updateLastNotificationTime(group.id, now);
+              }
+            }
           }
         }
       }
@@ -87,7 +102,7 @@ void callbackDispatcher() {
   });
 }
 
-void _showNotification(TrackGroup group) {
+Future<void> _showNotification(TrackGroup group) async {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   const androidDetails = AndroidNotificationDetails(
     'call_monitor_channel',
@@ -95,10 +110,30 @@ void _showNotification(TrackGroup group) {
     channelDescription: 'Reminders for overdue calls',
     importance: Importance.max,
     priority: Priority.high,
+    actions: <AndroidNotificationAction>[
+      AndroidNotificationAction('CALL_NOW', 'Call Now'),
+      AndroidNotificationAction('VIEW_TIMELINE', 'View Timeline'),
+    ],
   );
   const details = NotificationDetails(android: androidDetails);
-  flutterLocalNotificationsPlugin.show(
-      group.id, 'Call Reminder', 'It\'s time to call ${group.name}!', details);
+
+  // Personalized Text
+  String body = 'It\'s time to call ${group.name}!';
+  if (group.frequency == 0) {
+    // Daily
+    body = 'Haven\'t spoken today? Give ${group.name} a call! 🌙';
+  } else if (group.frequency == 1) {
+    // Weekly
+    body = 'It\'s been a while! Catch up with ${group.name} this weekend. ❤️';
+  }
+
+  await flutterLocalNotificationsPlugin.show(
+    group.id,
+    'Time to connect with ${group.name}',
+    body,
+    details,
+    payload: group.id.toString(),
+  );
 }
 
 // QUERY CALL LOG (ALL PARAMS ARE OPTIONAL)

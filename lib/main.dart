@@ -6,6 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:call_monitor/data_source/call_logs/call_logs.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:call_monitor/pages/timeline_view_page.dart';
+import 'package:call_monitor/database/database_manager.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +32,44 @@ void main() async {
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) async {
+      final payload = response.payload;
+      if (payload == null) return;
+      final trackGroupId = int.tryParse(payload);
+      if (trackGroupId == null) return;
+
+      if (response.actionId == 'CALL_NOW') {
+        final db = DatabaseManager.database;
+        final contacts = await db.getContactsForTrackGroup(trackGroupId);
+        final numbers = contacts.expand((c) => c.phoneNumbers).toList();
+
+        if (numbers.isNotEmpty) {
+          if (numbers.length == 1) {
+            final url = Uri.parse('tel:${numbers.first}');
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url);
+            }
+          } else {
+            // Multiple numbers, go to view
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (_) => TimelineViewPage(trackGroupId: trackGroupId),
+              ),
+            );
+          }
+        }
+      } else {
+        // Default or VIEW_TIMELINE
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => TimelineViewPage(trackGroupId: trackGroupId),
+          ),
+        );
+      }
+    },
+  );
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
@@ -44,6 +86,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

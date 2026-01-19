@@ -38,6 +38,7 @@ class TrackGroups extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   IntColumn get frequency => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastNotificationTime => dateTime().nullable()();
 }
 
 class Histories extends Table {
@@ -81,7 +82,22 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          // Used to be only TrackGroups, but now we've added lastNotificationTime
+          await m.addColumn(trackGroups, trackGroups.lastNotificationTime);
+        }
+      },
+    );
+  }
 
   // Contact operations
   Future<List<Contact>> getAllContacts() => select(contacts).get();
@@ -140,6 +156,11 @@ class AppDatabase extends _$AppDatabase {
 
     final rows = await query.get();
     return rows.map((row) => row.readTable(contacts)).toList();
+  }
+
+  Future<void> updateLastNotificationTime(int trackGroupId, DateTime time) {
+    return (update(trackGroups)..where((t) => t.id.equals(trackGroupId)))
+        .write(TrackGroupsCompanion(lastNotificationTime: Value(time)));
   }
 }
 

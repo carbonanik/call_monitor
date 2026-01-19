@@ -490,8 +490,15 @@ class $TrackGroupsTable extends TrackGroups
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _lastNotificationTimeMeta =
+      const VerificationMeta('lastNotificationTime');
   @override
-  List<GeneratedColumn> get $columns => [id, name, frequency];
+  late final GeneratedColumn<DateTime> lastNotificationTime =
+      GeneratedColumn<DateTime>('last_notification_time', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, frequency, lastNotificationTime];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -515,6 +522,12 @@ class $TrackGroupsTable extends TrackGroups
       context.handle(_frequencyMeta,
           frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta));
     }
+    if (data.containsKey('last_notification_time')) {
+      context.handle(
+          _lastNotificationTimeMeta,
+          lastNotificationTime.isAcceptableOrUnknown(
+              data['last_notification_time']!, _lastNotificationTimeMeta));
+    }
     return context;
   }
 
@@ -530,6 +543,9 @@ class $TrackGroupsTable extends TrackGroups
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       frequency: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}frequency'])!,
+      lastNotificationTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_notification_time']),
     );
   }
 
@@ -543,14 +559,21 @@ class TrackGroup extends DataClass implements Insertable<TrackGroup> {
   final int id;
   final String name;
   final int frequency;
+  final DateTime? lastNotificationTime;
   const TrackGroup(
-      {required this.id, required this.name, required this.frequency});
+      {required this.id,
+      required this.name,
+      required this.frequency,
+      this.lastNotificationTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['frequency'] = Variable<int>(frequency);
+    if (!nullToAbsent || lastNotificationTime != null) {
+      map['last_notification_time'] = Variable<DateTime>(lastNotificationTime);
+    }
     return map;
   }
 
@@ -559,6 +582,9 @@ class TrackGroup extends DataClass implements Insertable<TrackGroup> {
       id: Value(id),
       name: Value(name),
       frequency: Value(frequency),
+      lastNotificationTime: lastNotificationTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastNotificationTime),
     );
   }
 
@@ -569,6 +595,8 @@ class TrackGroup extends DataClass implements Insertable<TrackGroup> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       frequency: serializer.fromJson<int>(json['frequency']),
+      lastNotificationTime:
+          serializer.fromJson<DateTime?>(json['lastNotificationTime']),
     );
   }
   @override
@@ -578,19 +606,32 @@ class TrackGroup extends DataClass implements Insertable<TrackGroup> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'frequency': serializer.toJson<int>(frequency),
+      'lastNotificationTime':
+          serializer.toJson<DateTime?>(lastNotificationTime),
     };
   }
 
-  TrackGroup copyWith({int? id, String? name, int? frequency}) => TrackGroup(
+  TrackGroup copyWith(
+          {int? id,
+          String? name,
+          int? frequency,
+          Value<DateTime?> lastNotificationTime = const Value.absent()}) =>
+      TrackGroup(
         id: id ?? this.id,
         name: name ?? this.name,
         frequency: frequency ?? this.frequency,
+        lastNotificationTime: lastNotificationTime.present
+            ? lastNotificationTime.value
+            : this.lastNotificationTime,
       );
   TrackGroup copyWithCompanion(TrackGroupsCompanion data) {
     return TrackGroup(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      lastNotificationTime: data.lastNotificationTime.present
+          ? data.lastNotificationTime.value
+          : this.lastNotificationTime,
     );
   }
 
@@ -599,54 +640,66 @@ class TrackGroup extends DataClass implements Insertable<TrackGroup> {
     return (StringBuffer('TrackGroup(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('frequency: $frequency')
+          ..write('frequency: $frequency, ')
+          ..write('lastNotificationTime: $lastNotificationTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, frequency);
+  int get hashCode => Object.hash(id, name, frequency, lastNotificationTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TrackGroup &&
           other.id == this.id &&
           other.name == this.name &&
-          other.frequency == this.frequency);
+          other.frequency == this.frequency &&
+          other.lastNotificationTime == this.lastNotificationTime);
 }
 
 class TrackGroupsCompanion extends UpdateCompanion<TrackGroup> {
   final Value<int> id;
   final Value<String> name;
   final Value<int> frequency;
+  final Value<DateTime?> lastNotificationTime;
   const TrackGroupsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.frequency = const Value.absent(),
+    this.lastNotificationTime = const Value.absent(),
   });
   TrackGroupsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.frequency = const Value.absent(),
+    this.lastNotificationTime = const Value.absent(),
   }) : name = Value(name);
   static Insertable<TrackGroup> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<int>? frequency,
+    Expression<DateTime>? lastNotificationTime,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (frequency != null) 'frequency': frequency,
+      if (lastNotificationTime != null)
+        'last_notification_time': lastNotificationTime,
     });
   }
 
   TrackGroupsCompanion copyWith(
-      {Value<int>? id, Value<String>? name, Value<int>? frequency}) {
+      {Value<int>? id,
+      Value<String>? name,
+      Value<int>? frequency,
+      Value<DateTime?>? lastNotificationTime}) {
     return TrackGroupsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       frequency: frequency ?? this.frequency,
+      lastNotificationTime: lastNotificationTime ?? this.lastNotificationTime,
     );
   }
 
@@ -662,6 +715,10 @@ class TrackGroupsCompanion extends UpdateCompanion<TrackGroup> {
     if (frequency.present) {
       map['frequency'] = Variable<int>(frequency.value);
     }
+    if (lastNotificationTime.present) {
+      map['last_notification_time'] =
+          Variable<DateTime>(lastNotificationTime.value);
+    }
     return map;
   }
 
@@ -670,7 +727,8 @@ class TrackGroupsCompanion extends UpdateCompanion<TrackGroup> {
     return (StringBuffer('TrackGroupsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('frequency: $frequency')
+          ..write('frequency: $frequency, ')
+          ..write('lastNotificationTime: $lastNotificationTime')
           ..write(')'))
         .toString();
   }
@@ -1767,12 +1825,14 @@ typedef $$TrackGroupsTableCreateCompanionBuilder = TrackGroupsCompanion
   Value<int> id,
   required String name,
   Value<int> frequency,
+  Value<DateTime?> lastNotificationTime,
 });
 typedef $$TrackGroupsTableUpdateCompanionBuilder = TrackGroupsCompanion
     Function({
   Value<int> id,
   Value<String> name,
   Value<int> frequency,
+  Value<DateTime?> lastNotificationTime,
 });
 
 final class $$TrackGroupsTableReferences
@@ -1831,6 +1891,10 @@ class $$TrackGroupsTableFilterComposer
 
   ColumnFilters<int> get frequency => $composableBuilder(
       column: $table.frequency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastNotificationTime => $composableBuilder(
+      column: $table.lastNotificationTime,
+      builder: (column) => ColumnFilters(column));
 
   Expression<bool> trackGroupContactsRefs(
       Expression<bool> Function($$TrackGroupContactsTableFilterComposer f) f) {
@@ -1892,6 +1956,10 @@ class $$TrackGroupsTableOrderingComposer
 
   ColumnOrderings<int> get frequency => $composableBuilder(
       column: $table.frequency, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastNotificationTime => $composableBuilder(
+      column: $table.lastNotificationTime,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$TrackGroupsTableAnnotationComposer
@@ -1911,6 +1979,9 @@ class $$TrackGroupsTableAnnotationComposer
 
   GeneratedColumn<int> get frequency =>
       $composableBuilder(column: $table.frequency, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastNotificationTime => $composableBuilder(
+      column: $table.lastNotificationTime, builder: (column) => column);
 
   Expression<T> trackGroupContactsRefs<T extends Object>(
       Expression<T> Function($$TrackGroupContactsTableAnnotationComposer a) f) {
@@ -1985,21 +2056,25 @@ class $$TrackGroupsTableTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<int> frequency = const Value.absent(),
+            Value<DateTime?> lastNotificationTime = const Value.absent(),
           }) =>
               TrackGroupsCompanion(
             id: id,
             name: name,
             frequency: frequency,
+            lastNotificationTime: lastNotificationTime,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String name,
             Value<int> frequency = const Value.absent(),
+            Value<DateTime?> lastNotificationTime = const Value.absent(),
           }) =>
               TrackGroupsCompanion.insert(
             id: id,
             name: name,
             frequency: frequency,
+            lastNotificationTime: lastNotificationTime,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
