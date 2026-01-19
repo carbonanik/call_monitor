@@ -30,9 +30,11 @@ final callLogsByTrackGroupIdProvider =
     final contacts = await notifier.db.getContactsForTrackGroup(trackGroupId);
     final numbers = contacts.expand((c) => c.phoneNumbers).toList();
 
-    final res = await Future.wait(numbers.map(
-      (number) => CallLogsDataSource().getCallLogsByNumber(number),
-    ));
-    return res.expand((i) => i).toList();
+    List<CallLogEntry> allLogs = [];
+    for (var number in numbers) {
+      final logs = await CallLogsDataSource().getCallLogsByNumber(number);
+      allLogs.addAll(logs);
+    }
+    return allLogs;
   },
 );

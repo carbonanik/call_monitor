@@ -76,4 +76,10 @@ class TrackGroupDatabase extends StateNotifier<AsyncValue<List<TrackGroup>>> {
     await db.addContactToTrackGroup(trackGroupId, contactInternalId);
     readTrackGroup();
   }
+
+  Future<void> updateFrequency(int trackGroupId, int frequency) async {
+    await (db.update(db.trackGroups)..where((t) => t.id.equals(trackGroupId)))
+        .write(TrackGroupsCompanion(frequency: Value(frequency)));
+    readTrackGroup();
+  }
 }

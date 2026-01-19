@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/provider/track_group_database_provider.dart';
 import '../state/provider/selected_contact_provider.dart';
+import 'package:call_monitor/component/frequency.dart';
 
 class CreateTrackGroup extends ConsumerStatefulWidget {
   const CreateTrackGroup({super.key});
@@ -14,7 +15,8 @@ class CreateTrackGroup extends ConsumerStatefulWidget {
 
 class _CreateTrackGroupState extends ConsumerState<CreateTrackGroup> {
   final TextEditingController _groupNameController = TextEditingController();
-  final TextEditingController _frequencyController = TextEditingController();
+  // final TextEditingController _frequencyController = TextEditingController(); // Removed
+  MonitoringFrequency _selectedFrequency = MonitoringFrequency.daily;
   final _formKey = GlobalKey<FormState>();
   bool autoGenerateName = true;
 
@@ -52,13 +54,26 @@ class _CreateTrackGroupState extends ConsumerState<CreateTrackGroup> {
                     return null;
                   }),
               const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _frequencyController,
+              DropdownButtonFormField<MonitoringFrequency>(
+                value: _selectedFrequency,
                 decoration: const InputDecoration(
                   labelText: 'Frequency',
                   border: OutlineInputBorder(),
                 ),
-                keyboardType: TextInputType.number,
+                items: MonitoringFrequency.values
+                    .map((MonitoringFrequency frequency) {
+                  return DropdownMenuItem<MonitoringFrequency>(
+                    value: frequency,
+                    child: Text(frequency.label),
+                  );
+                }).toList(),
+                onChanged: (MonitoringFrequency? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedFrequency = newValue;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 16.0),
               ElevatedButton(
@@ -129,9 +144,7 @@ class _CreateTrackGroupState extends ConsumerState<CreateTrackGroup> {
                                   TrackGroup(
                                     id: 0, // ID is auto-incremented, but we need a placeholder if we use the model class locally
                                     name: _groupNameController.text,
-                                    frequency: int.tryParse(
-                                            _frequencyController.text) ??
-                                        0,
+                                    frequency: _selectedFrequency.index,
                                   ),
                                   selectedContacts
                                       .map((e) => Contact(

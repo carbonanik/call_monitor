@@ -4,62 +4,58 @@ import 'package:call_monitor/component/timeline_card_date_view.dart';
 import 'package:call_monitor/component/timeline_card_duration_view.dart';
 import 'package:call_monitor/data_source/call_logs/provider/call_logs_provider.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
+import 'package:call_monitor/component/frequency.dart';
+import 'package:call_monitor/component/frequency_selection_dialog.dart';
+import 'package:call_monitor/database/provider/track_group_database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:svg_flutter/svg.dart';
 
-class TimelineViewPage extends StatelessWidget {
+class TimelineViewPage extends ConsumerWidget {
   final int trackGroupId;
 
   const TimelineViewPage({required this.trackGroupId, super.key});
 
-  void handleClick(String value, BuildContext context) {
+  void handleClick(String value, BuildContext context, WidgetRef ref) {
     switch (value) {
       case 'Set frequency':
-        setFrequency(context);
+        setFrequency(context, ref);
         break;
     }
   }
 
-  void setFrequency(BuildContext context) async {
-    final frequencyController = TextEditingController();
-    final String? frequency = await showDialog<String>(
+  void setFrequency(BuildContext context, WidgetRef ref) async {
+    // Fetch current frequency
+    final trackGroup = await ref
+        .read(trackGroupDatabaseProvider.notifier)
+        .getTrackGroupById(trackGroupId);
+
+    if (trackGroup == null) return;
+
+    final initialFrequency = MonitoringFrequency.fromInt(trackGroup.frequency);
+
+    final MonitoringFrequency? selectedFrequency =
+        await showDialog<MonitoringFrequency>(
       context: context,
       builder: (context) {
-        return setFrequencyDialog(frequencyController, context);
+        return FrequencySelectionDialog(initialFrequency: initialFrequency);
       },
     );
 
-    if (frequency != null) {}
-  }
-
-  AlertDialog setFrequencyDialog(
-      TextEditingController frequencyController, BuildContext context) {
-    return AlertDialog(
-        title: const Text('Set frequency in days'),
-        content: TextField(
-          decoration: const InputDecoration(
-            hintText: 'Frequency',
-          ),
-          controller: frequencyController,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, frequencyController.text);
-            },
-            child: const Text('Save'),
-          )
-        ]);
+    if (selectedFrequency != null) {
+      await ref
+          .read(trackGroupDatabaseProvider.notifier)
+          .updateFrequency(trackGroupId, selectedFrequency.index);
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calender Activity'),
         actions: [
-          _buildMenuOptions(context),
+          _buildMenuOptions(context, ref),
         ],
       ),
       body: Consumer(builder: (context, ref, child) {
@@ -128,9 +124,10 @@ class TimelineViewPage extends StatelessWidget {
     );
   }
 
-  PopupMenuButton<String> _buildMenuOptions(BuildContext context) {
+  PopupMenuButton<String> _buildMenuOptions(
+      BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      onSelected: (value) => handleClick(value, context),
+      onSelected: (value) => handleClick(value, context, ref),
       itemBuilder: (BuildContext context) {
         return {
           'Set frequency',
