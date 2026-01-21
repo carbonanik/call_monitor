@@ -49,8 +49,11 @@ void callbackDispatcher() {
       // Initialize Database
       final db = AppDatabase();
       final groups = await db.getAllTrackGroups();
+      int notificationsSent = 0;
 
       for (final group in groups) {
+        if (notificationsSent >= 1) break;
+
         final contacts = await db.getContactsForTrackGroup(group.id);
         final numbers = contacts.expand((c) => c.phoneNumbers).toList();
 
@@ -74,9 +77,10 @@ void callbackDispatcher() {
             final now = DateTime.now();
             final lastTime = group.lastNotificationTime;
 
-            // Frequency Cap: Max 1 per day
+            // Frequency Cap: Max 1 per calendar day to avoid time drift
+            final startOfToday = DateTime(now.year, now.month, now.day);
             final alreadyNotifiedToday =
-                lastTime != null && now.difference(lastTime).inHours < 24;
+                lastTime != null && lastTime.isAfter(startOfToday);
 
             if (!alreadyNotifiedToday) {
               // Smart Timing: Check safe window (e.g. 8 AM - 9 PM) unless in debug
@@ -87,6 +91,7 @@ void callbackDispatcher() {
               if (isSafeWindow) {
                 await _showNotification(group);
                 await db.updateLastNotificationTime(group.id, now);
+                notificationsSent++;
               }
             }
           }
@@ -111,18 +116,20 @@ Future<void> _showNotification(TrackGroup group) async {
     importance: Importance.max,
     priority: Priority.high,
     actions: <AndroidNotificationAction>[
-      AndroidNotificationAction('CALL_NOW', 'Call Now'),
-      AndroidNotificationAction('VIEW_TIMELINE', 'View Timeline'),
+      AndroidNotificationAction('CALL_NOW', 'Call Now',
+          showsUserInterface: true),
+      AndroidNotificationAction('VIEW_TIMELINE', 'View Timeline',
+          showsUserInterface: true),
     ],
   );
   const details = NotificationDetails(android: androidDetails);
 
   // Personalized Text
   String body = 'It\'s time to call ${group.name}!';
-  if (group.frequency == 0) {
+  if (group.frequency == 1) {
     // Daily
     body = 'Haven\'t spoken today? Give ${group.name} a call! 🌙';
-  } else if (group.frequency == 1) {
+  } else if (group.frequency == 2) {
     // Weekly
     body = 'It\'s been a while! Catch up with ${group.name} this weekend. ❤️';
   }

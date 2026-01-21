@@ -34,42 +34,22 @@ void main() async {
       InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse response) async {
-      final payload = response.payload;
-      if (payload == null) return;
-      final trackGroupId = int.tryParse(payload);
-      if (trackGroupId == null) return;
-
-      if (response.actionId == 'CALL_NOW') {
-        final db = DatabaseManager.database;
-        final contacts = await db.getContactsForTrackGroup(trackGroupId);
-        final numbers = contacts.expand((c) => c.phoneNumbers).toList();
-
-        if (numbers.isNotEmpty) {
-          if (numbers.length == 1) {
-            final url = Uri.parse('tel:${numbers.first}');
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url);
-            }
-          } else {
-            // Multiple numbers, go to view
-            navigatorKey.currentState?.push(
-              MaterialPageRoute(
-                builder: (_) => TimelineViewPage(trackGroupId: trackGroupId),
-              ),
-            );
-          }
-        }
-      } else {
-        // Default or VIEW_TIMELINE
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (_) => TimelineViewPage(trackGroupId: trackGroupId),
-          ),
-        );
-      }
-    },
+    onDidReceiveNotificationResponse: _handleNotificationResponse,
   );
+
+  // Handle Cold Start
+  final notificationAppLaunchDetails =
+      await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+    final response = notificationAppLaunchDetails!.notificationResponse;
+    if (response != null) {
+      // Small delay to ensure navigator is ready
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _handleNotificationResponse(response);
+      });
+    }
+  }
+
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
@@ -80,6 +60,47 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
+void _handleNotificationResponse(NotificationResponse response) async {
+  final payload = response.payload;
+  if (payload == null) return;
+  final trackGroupId = int.tryParse(payload);
+  if (trackGroupId == null) return;
+
+  // Ensure navigator is ready
+  if (navigatorKey.currentState == null) {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  if (response.actionId == 'CALL_NOW') {
+    final db = DatabaseManager.database;
+    final contacts = await db.getContactsForTrackGroup(trackGroupId);
+    final numbers = contacts.expand((c) => c.phoneNumbers).toList();
+
+    if (numbers.isNotEmpty) {
+      if (numbers.length == 1) {
+        final url = Uri.parse('tel:${numbers.first}');
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url);
+        }
+      } else {
+        // Multiple numbers, go to view
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => TimelineViewPage(trackGroupId: trackGroupId),
+          ),
+        );
+      }
+    }
+  } else {
+    // Default or VIEW_TIMELINE
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => TimelineViewPage(trackGroupId: trackGroupId),
+      ),
+    );
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -87,7 +108,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Flutter Demo',
+      title: 'Call Monitor',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

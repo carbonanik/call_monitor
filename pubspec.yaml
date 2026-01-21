@@ -63,6 +63,13 @@ dev_dependencies:
   dart_style: ^3.0.1
   build: ^2.4.1
   build_config: ^1.1.1
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

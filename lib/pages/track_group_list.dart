@@ -17,6 +17,21 @@ class TrackGroupList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              height: 48,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Call Monitor',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: _buildFloatingAction(context),
       body: _body(),
     );
