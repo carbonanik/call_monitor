@@ -92,16 +92,23 @@ class TimelineViewPage extends ConsumerWidget {
                     /// ? calculate duration
                     final duration = _calculateDuration(logInSameDay);
 
-                    final isCompleted = duration.inSeconds > 0;
+                    final TimelineStatus status;
+                    if (duration.inSeconds > 0) {
+                      status = TimelineStatus.completed;
+                    } else if (logInSameDay.isNotEmpty) {
+                      status = TimelineStatus.partial;
+                    } else {
+                      status = TimelineStatus.empty;
+                    }
 
                     return Padding(
                       padding: const EdgeInsets.only(left: 20),
                       child: MyTimelineTile(
                         isLast: index == 0,
                         isFirst: index == listDays.length - 1,
-                        isCompleted: isCompleted,
+                        status: status,
                         child: _buildCardDetails(
-                            listDays, index, isCompleted, duration),
+                            listDays, index, status, duration),
                       ),
                     );
                   },
@@ -141,22 +148,26 @@ class TimelineViewPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildCardDetails(
-      List<DateTime> listDays, int index, bool isCompleted, Duration duration) {
+  Widget _buildCardDetails(List<DateTime> listDays, int index,
+      TimelineStatus status, Duration duration) {
     return Row(
       children: [
-        TimelineCardDateView(date: listDays[index], isCompleted: isCompleted),
+        TimelineCardDateView(date: listDays[index], status: status),
         const Spacer(),
-        isCompleted
+        status == TimelineStatus.completed
             ? TimelineCardDurationView(
                 duration: duration,
               )
             : Padding(
                 padding: const EdgeInsets.only(right: 40),
                 child: Icon(
-                  Icons.sentiment_dissatisfied,
+                  status == TimelineStatus.partial
+                      ? Icons.phone_callback
+                      : Icons.sentiment_dissatisfied,
                   size: 60,
-                  color: Colors.grey.shade400,
+                  color: status == TimelineStatus.partial
+                      ? Colors.amber.shade400
+                      : Colors.grey.shade400,
                 ),
               ),
       ],
