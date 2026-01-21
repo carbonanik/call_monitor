@@ -124,6 +124,8 @@ class AppDatabase extends _$AppDatabase {
 
   // TrackGroup operations
   Future<List<TrackGroup>> getAllTrackGroups() => select(trackGroups).get();
+  Future<TrackGroup?> getTrackGroupById(int id) =>
+      (select(trackGroups)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<int> createTrackGroup(
       TrackGroupsCompanion trackGroup, List<int> contactIds) async {
