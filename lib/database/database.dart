@@ -21,7 +21,11 @@ class TrackedContacts extends Table {
 
 @DriftDatabase(tables: [TrackedContacts])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  // AppDatabase() : super(_openConnection());
+
+  AppDatabase._internal() : super(_openConnection());
+
+  static final AppDatabase instance = AppDatabase._internal();
 
   @override
   int get schemaVersion => 3;
@@ -55,6 +59,12 @@ class AppDatabase extends _$AppDatabase {
       update(trackedContacts).replace(contact);
   Future<int> deleteTrackedContact(int id) =>
       (delete(trackedContacts)..where((t) => t.id.equals(id))).go();
+
+  Future<void> resetLastNotified(int contactId) {
+    return (update(trackedContacts)..where((t) => t.id.equals(contactId)))
+        .write(const TrackedContactsCompanion(lastNotified: Value.absent()));
+  }
+
   Future<void> deleteAllData() => delete(trackedContacts).go();
 }
 

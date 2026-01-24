@@ -20,6 +20,7 @@ class _FrequencySelectionScreenState
     extends ConsumerState<FrequencySelectionScreen> {
   // Map to store selected frequency for each contact index
   final Map<int, int> _selectedFrequencies = {};
+  bool _isSaving = false;
 
   final List<Map<String, dynamic>> _options = [
     {'label': 'Everyday', 'days': 1},
@@ -39,30 +40,48 @@ class _FrequencySelectionScreenState
   }
 
   Future<void> _saveAndFinish() async {
-    final db = ref.read(databaseProvider);
+    if (_isSaving || !mounted) return;
 
-    for (int i = 0; i < widget.selectedContacts.length; i++) {
-      final contact = widget.selectedContacts[i];
-      final frequency = _selectedFrequencies[i] ?? 7;
+    setState(() {
+      _isSaving = true;
+    });
 
-      final name = contact.displayName;
-      final rawPhone =
-          contact.phones.isNotEmpty ? contact.phones.first.number : '';
-      // Normalize number to ensure unique constraint works reliably
-      final phone = rawPhone.replaceAll(RegExp(r'\D'), '');
+    try {
+      final db = ref.read(databaseProvider);
 
-      await db.addTrackedContact(
-        TrackedContactsCompanion(
-          name: drift.Value(name),
-          phoneNumber: drift.Value(phone),
-          frequencyDays: drift.Value(frequency),
-          lastCalled: const drift.Value.absent(),
-        ),
-      );
-    }
+      for (int i = 0; i < widget.selectedContacts.length; i++) {
+        final contact = widget.selectedContacts[i];
+        final frequency = _selectedFrequencies[i] ?? 7;
 
-    if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        final name = contact.displayName;
+        final rawPhone =
+            contact.phones.isNotEmpty ? contact.phones.first.number : '';
+        // Normalize number to ensure unique constraint works reliably
+        final phone = rawPhone.replaceAll(RegExp(r'\D'), '');
+
+        await db.addTrackedContact(
+          TrackedContactsCompanion(
+            name: drift.Value(name),
+            phoneNumber: drift.Value(phone),
+            frequencyDays: drift.Value(frequency),
+            lastCalled: const drift.Value.absent(),
+          ),
+        );
+      }
+
+      if (mounted) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/home', (route) => false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving contacts: $e')),
+        );
+      }
     }
   }
 
@@ -101,8 +120,17 @@ class _FrequencySelectionScreenState
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: ElevatedButton(
-              onPressed: _saveAndFinish,
-              child: const Text('Continue'),
+              onPressed: _isSaving ? null : _saveAndFinish,
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Continue'),
             ),
           ),
         ],

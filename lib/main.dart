@@ -16,7 +16,7 @@ void main() async {
   await BackgroundService.init();
 
   // Initialize notification service for actions
-  await NotificationService(AppDatabase()).init();
+  await NotificationService(AppDatabase.instance).init();
 
   runApp(
     const ProviderScope(

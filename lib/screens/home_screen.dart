@@ -252,9 +252,24 @@ class ContactListItem extends StatelessWidget {
           const SizedBox(width: 12),
           IconButton.filled(
             onPressed: () async {
-              final url = 'tel:${contact.phoneNumber}';
-              if (await canLaunchUrl(Uri.parse(url))) {
-                await launchUrl(Uri.parse(url));
+              // final url = 'tel:${contact.phoneNumber}';
+              // if (await canLaunchUrl(Uri.parse(url))) {
+              //   await launchUrl(Uri.parse(url));
+              // }
+
+              // final phone = response.payload!.replaceAll(RegExp(r'\s+'), '');
+              final phone = contact.phoneNumber.replaceAll(RegExp(r'\s+'), '');
+              final uri = Uri.parse(
+                phone.startsWith('+') ? 'tel:$phone' : 'tel:+$phone',
+              );
+
+              try {
+                await launchUrl(
+                  uri,
+                  mode: LaunchMode.externalApplication,
+                );
+              } catch (e) {
+                print('Failed to launch dialer: $e');
               }
             },
             icon: const Icon(Icons.call),

@@ -11,7 +11,7 @@ void callbackDispatcher() {
     // Add logging for verification
     print("Workmanager: Starting background task - $task");
 
-    final db = AppDatabase();
+    final db = AppDatabase.instance;
     final callLogService = CallLogService(db);
     final notificationService = NotificationService(db);
 

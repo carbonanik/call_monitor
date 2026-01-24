@@ -1,9 +1,12 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:math';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 import 'package:drift/drift.dart' as drift;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/widgets.dart';
 import '../database/database.dart';
 
 class NotificationService {
@@ -11,7 +14,14 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
-  NotificationService(this.db);
+  static NotificationService? _instance;
+
+  factory NotificationService(AppDatabase db) {
+    _instance ??= NotificationService._internal(db);
+    return _instance!;
+  }
+
+  NotificationService._internal(this.db);
 
   // Categorized messages for better UX
   final Map<String, List<String>> _warmMessages = {
@@ -38,30 +48,24 @@ class NotificationService {
 
     await _notifications.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveNotificationResponse: notificationTapHandler,
+      onDidReceiveBackgroundNotificationResponse: notificationTapHandler,
     );
+
+    // Check if app was launched from a notification
+    final launchDetails =
+        await _notifications.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      if (launchDetails?.notificationResponse != null) {
+        notificationTapHandler(launchDetails!.notificationResponse!);
+      }
+    }
   }
 
   Future<void> requestPermission() async {
     final status = await Permission.notification.request();
     if (status.isDenied) {
       // Permission was denied
-    }
-  }
-
-  // Handle actions like "Call Now"
-  static void _onNotificationResponse(NotificationResponse response) async {
-    if (response.payload == null) return;
-
-    if (response.actionId == 'call_action') {
-      final url = 'tel:${response.payload}';
-      if (await canLaunchUrl(Uri.parse(url))) {
-        await launchUrl(Uri.parse(url));
-      }
-    } else if (response.actionId == 'snooze_action') {
-      // In a real app, we'd schedule a reminder for 4 hours later
-      // For MVP, we can just leave this as a placeholder or dismiss
-      // dismiss
     }
   }
 
@@ -75,8 +79,11 @@ class NotificationService {
 
       // Rule: Max 1 notification per contact per day
       if (contact.lastNotified != null) {
-        final lastNotifiedDate = DateTime(contact.lastNotified!.year,
-            contact.lastNotified!.month, contact.lastNotified!.day);
+        final lastNotifiedDate = DateTime(
+          contact.lastNotified!.year,
+          contact.lastNotified!.month,
+          contact.lastNotified!.day,
+        );
         final today = DateTime(now.year, now.month, now.day);
         if (lastNotifiedDate.isAtSameMomentAs(today)) continue;
       }
@@ -141,6 +148,7 @@ class NotificationService {
           'snooze_action',
           'Snooze',
           showsUserInterface: false,
+          cancelNotification: true, // 👈 THIS IS KEY
         ),
       ],
     );
@@ -155,11 +163,40 @@ class NotificationService {
       payload: contact.phoneNumber,
     );
 
-    // Update lastNotified
+    // Update lastNotified to null (for testing/reset purposes)
     if (updateDb) {
       await db.updateTrackedContact(
         contact.copyWith(lastNotified: drift.Value(DateTime.now())),
       );
     }
+  }
+}
+
+@pragma('vm:entry-point')
+void notificationTapHandler(NotificationResponse response) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  print("Notification tap detected!");
+  print("Action ID: ${response.actionId}");
+  print("Payload: ${response.payload}");
+
+  if (response.payload == null) return;
+
+  if (response.actionId == 'call_action' || response.actionId == null) {
+    final phone = response.payload!.replaceAll(RegExp(r'\s+'), '');
+    final uri = Uri.parse(
+      phone.startsWith('+') ? 'tel:$phone' : 'tel:+$phone',
+    );
+
+    try {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Failed to launch dialer: $e');
+    }
+  } else if (response.actionId == 'snooze_action') {
+    // Do NOTHING heavy here
+    print("Snooze registered for notification ${response.id}");
   }
 }
