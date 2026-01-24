@@ -1,3 +1,4 @@
+import 'package:call_monitor/components/gradient_button.dart';
 import 'package:call_monitor/components/list_avater.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:call_monitor/screens/contact_selection_screen.dart';
@@ -95,7 +96,7 @@ class HomeContent extends ConsumerWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Assets.images.logoText.image(
+            Assets.images.logoTextAlpha.image(
               width: 100,
             ),
           ],
@@ -130,13 +131,13 @@ class HomeContent extends ConsumerWidget {
                     Text('No one added yet.',
                         style: AppTheme.lightTheme.textTheme.titleLarge),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    GradientButton(
                       onPressed: () =>
                           Navigator.of(context).pushNamed('/select-contacts'),
-                      style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12)),
-                      child: const Text('Add someone you care about'),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      isFullWidth: false,
+                      text: 'Add someone you care about',
                     ),
                   ],
                 ),
@@ -215,7 +216,7 @@ class ContactListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -224,13 +225,6 @@ class ContactListItem extends StatelessWidget {
       child: Row(
         children: [
           ListAvatar(displayName: contact.name),
-          // CircleAvatar(
-          //   radius: 28,
-          //   backgroundColor: Colors.white,
-          //   child: Text(contact.name[0],
-          //       style:
-          //           const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          // ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

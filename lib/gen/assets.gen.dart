@@ -26,8 +26,17 @@ class $AssetsImagesGen {
   AssetGenImage get logoText =>
       const AssetGenImage('assets/images/logo_text.png');
 
+  /// File path: assets/images/logo_text_alpha.png
+  AssetGenImage get logoTextAlpha =>
+      const AssetGenImage('assets/images/logo_text_alpha.png');
+
+  /// File path: assets/images/splash_art.png
+  AssetGenImage get splashArt =>
+      const AssetGenImage('assets/images/splash_art.png');
+
   /// List of all assets
-  List<AssetGenImage> get values => [logoIcon, logoIconText, logoText];
+  List<AssetGenImage> get values =>
+      [logoIcon, logoIconText, logoText, logoTextAlpha, splashArt];
 }
 
 class Assets {

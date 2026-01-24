@@ -32,8 +32,13 @@ class OnboardingScreen extends StatelessWidget {
                       color: AppTheme.secondaryTextColor,
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
+                  Assets.images.splashArt.image(
+                    width: 200,
+                    height: 200,
+                  ),
                   // Small copy from prompt
+                  const SizedBox(height: 24),
                   Text(
                     '“This app gently reminds you to call the people you care about. No tracking. No judgment. Just reminders.”',
                     textAlign: TextAlign.center,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
+import 'package:call_monitor/components/gradient_button.dart';
 import 'frequency_selection_screen.dart';
 
 class ContactSelectionScreen extends ConsumerStatefulWidget {
@@ -188,11 +189,11 @@ class _ContactSelectionScreenState
                   style: AppTheme.lightTheme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
+                GradientButton(
                   onPressed: _selectedContacts.isEmpty
                       ? null
                       : _goToFrequencySelection,
-                  child: const Text('Continue'),
+                  text: 'Continue',
                 ),
               ],
             ),

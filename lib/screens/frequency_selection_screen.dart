@@ -1,8 +1,8 @@
-import 'package:call_monitor/components/list_avater.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
+import 'package:call_monitor/components/gradient_button.dart';
 import '../database/database.dart';
 import '../providers/database_provider.dart';
 import 'package:drift/drift.dart' as drift;
@@ -120,7 +120,7 @@ class _FrequencySelectionScreenState
           ),
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: ElevatedButton(
+            child: GradientButton(
               onPressed: _isSaving ? null : _saveAndFinish,
               child: _isSaving
                   ? const SizedBox(
@@ -131,7 +131,14 @@ class _FrequencySelectionScreenState
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Continue'),
+                  : const Text(
+                      'Continue',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
         ],
