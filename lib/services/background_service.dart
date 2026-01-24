@@ -33,8 +33,7 @@ void callbackDispatcher() {
 
 class BackgroundService {
   static Future<void> init() async {
-    // Set isInDebugMode to true to see a local notification when the task runs
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+    await Workmanager().initialize(callbackDispatcher);
     await Workmanager().registerPeriodicTask(
       "1",
       syncTask,

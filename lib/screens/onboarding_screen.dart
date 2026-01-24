@@ -1,6 +1,7 @@
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../components/gradient_button.dart';
 import 'contact_selection_screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -45,23 +46,14 @@ class OnboardingScreen extends StatelessWidget {
               const Spacer(),
               Column(
                 children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 48, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                  GradientButton(
+                    text: 'Choose who matters',
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                             builder: (_) => const ContactSelectionScreen()),
                       );
                     },
-                    child: const Text('Choose who matters'),
                   ),
                   const SizedBox(height: 16),
                   TextButton(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../providers/database_provider.dart';
 import '../services/notification_service.dart';
@@ -81,6 +83,56 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 32),
+          _buildSectionHeader('Support'),
+          _buildListTile(
+            context,
+            icon: Icons.info_outline,
+            title: 'About Just Call',
+            onTap: () {
+              Navigator.of(context).pushNamed('/about');
+            },
+          ),
+          _buildListTile(
+            context,
+            icon: Icons.report_problem_outlined,
+            title: 'Report a Problem',
+            onTap: () {
+              launchUrl(
+                Uri.parse(
+                  'mailto:support@justcall.app?subject=Just Call App Feedback',
+                ),
+              );
+            },
+          ),
+          _buildListTile(
+            context,
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            onTap: () {
+              launchUrl(
+                Uri.parse('https://your-privacy-policy-link.com'),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+          ),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    const Icon(Icons.info, color: AppTheme.secondaryTextColor),
+                title: Text(
+                  'Version ${snapshot.data!.version}',
+                  style: const TextStyle(
+                    color: AppTheme.secondaryTextColor,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

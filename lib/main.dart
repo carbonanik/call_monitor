@@ -1,3 +1,4 @@
+import 'package:call_monitor/screens/about_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
@@ -40,6 +41,7 @@ class JustCallApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/select-contacts': (context) => const ContactSelectionScreen(),
         '/manage-reminders': (context) => const ManageRemindersScreen(),
+        '/about': (context) => const AboutScreen(),
       },
     );
   }

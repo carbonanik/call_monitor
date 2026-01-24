@@ -1,3 +1,4 @@
+import 'package:call_monitor/components/list_avater.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -138,25 +139,40 @@ class _ContactSelectionScreenState
                           final contact = filteredContacts[index];
                           final isSelected =
                               _selectedContacts.contains(contact);
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: AppTheme.surfaceColor,
-                              child: Text(contact.displayName.isNotEmpty
-                                  ? contact.displayName[0]
-                                  : '?'),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
                             ),
-                            title: Text(contact.displayName),
-                            subtitle: Text(contact.phones.isNotEmpty
-                                ? contact.phones.first.number
-                                : 'No number'),
-                            trailing: Checkbox(
-                              value: isSelected,
-                              onChanged: (_) => _toggleContact(contact),
-                              activeColor: AppTheme.primaryColor,
+                            child: ListTile(
+                              selected: isSelected,
+                              selectedTileColor:
+                                  AppTheme.primaryColor.withValues(alpha: 0.1),
+                              selectedColor: Colors.black,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4)),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? AppTheme.primaryColor
+                                          .withValues(alpha: 0.4)
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              leading:
+                                  ListAvatar(displayName: contact.displayName),
+                              title: Text(contact.displayName),
+                              subtitle: Text(contact.phones.isNotEmpty
+                                  ? contact.phones.first.number
+                                  : 'No number'),
+                              trailing: Checkbox(
+                                value: isSelected,
+                                onChanged: (_) => _toggleContact(contact),
+                                activeColor: AppTheme.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
+                              onTap: () => _toggleContact(contact),
                             ),
-                            onTap: () => _toggleContact(contact),
                           );
                         },
                       );

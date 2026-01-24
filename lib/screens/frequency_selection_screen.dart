@@ -1,3 +1,4 @@
+import 'package:call_monitor/components/list_avater.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -166,6 +167,7 @@ class _ContactFrequencyCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              // ListAvatar(contact: contact),
               CircleAvatar(
                 backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                 child: Text(

@@ -1,6 +1,8 @@
+import 'package:call_monitor/components/list_avater.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:call_monitor/screens/contact_selection_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
@@ -41,8 +43,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await callLogService.syncCallLogs();
 
     // After syncing, check if any notifications should be triggered
-    final contacts = await db.getAllTrackedContacts();
-    await notificationService.checkAndNotify(contacts);
+    // final contacts = await db.getAllTrackedContacts();
+    // await notificationService.checkAndNotify(contacts);
   }
 
   void _onItemTapped(int index) {
@@ -105,7 +107,7 @@ class HomeContent extends ConsumerWidget {
             tooltip: 'Sync Call Logs',
           ),
           IconButton(
-            icon: const Icon(Icons.add_alarm),
+            icon: const Icon(Icons.person_add),
             tooltip: 'Add Contact',
             onPressed: () {
               Navigator.of(context).push(
@@ -221,13 +223,14 @@ class ContactListItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Colors.white,
-            child: Text(contact.name[0],
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          ),
+          ListAvatar(displayName: contact.name),
+          // CircleAvatar(
+          //   radius: 28,
+          //   backgroundColor: Colors.white,
+          //   child: Text(contact.name[0],
+          //       style:
+          //           const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          // ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -250,14 +253,8 @@ class ContactListItem extends StatelessWidget {
           else
             const StatusBadge(isTime: false),
           const SizedBox(width: 12),
-          IconButton.filled(
+          IconButton(
             onPressed: () async {
-              // final url = 'tel:${contact.phoneNumber}';
-              // if (await canLaunchUrl(Uri.parse(url))) {
-              //   await launchUrl(Uri.parse(url));
-              // }
-
-              // final phone = response.payload!.replaceAll(RegExp(r'\s+'), '');
               final phone = contact.phoneNumber.replaceAll(RegExp(r'\s+'), '');
               final uri = Uri.parse(
                 phone.startsWith('+') ? 'tel:$phone' : 'tel:+$phone',
@@ -273,10 +270,6 @@ class ContactListItem extends StatelessWidget {
               }
             },
             icon: const Icon(Icons.call),
-            style: IconButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-            ),
           ),
         ],
       ),

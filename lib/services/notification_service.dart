@@ -148,7 +148,7 @@ class NotificationService {
           'snooze_action',
           'Snooze',
           showsUserInterface: false,
-          cancelNotification: true, // 👈 THIS IS KEY
+          cancelNotification: true,
         ),
       ],
     );
