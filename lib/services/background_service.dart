@@ -37,8 +37,7 @@ class BackgroundService {
     await Workmanager().registerPeriodicTask(
       "1",
       syncTask,
-      frequency: const Duration(minutes: 15), // Check every 4 hours
-      initialDelay: const Duration(minutes: 1),
+      frequency: const Duration(hours: 4), // Check every 4 hours
       constraints: Constraints(
         requiresBatteryNotLow: true,
       ),
