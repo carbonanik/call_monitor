@@ -77,6 +77,13 @@ class NotificationService {
     for (var contact in contacts) {
       if (!contact.remindersEnabled) continue;
 
+      // New: Staggering logic to avoid "notification storm"
+      if (!_isTimeForNotification(contact, now)) {
+        print(
+            "NotificationService: Skipping ${contact.name} - not its time slot yet.");
+        continue;
+      }
+
       // Rule: Max 1 notification per contact per day
       if (contact.lastNotified != null) {
         final lastNotifiedDate = DateTime(
@@ -96,6 +103,21 @@ class NotificationService {
         await _showNotification(contact, daysSince);
       }
     }
+  }
+
+  /// Determines if it's the right time slot for this contact to be notified.
+  /// Spreads notifications between 9 AM and 8 PM based on contact ID.
+  bool _isTimeForNotification(TrackedContact contact, DateTime now) {
+    // Start window at 9 AM, end at 8 PM (11 hour window)
+    const int startHour = 9;
+    const int windowSize = 11;
+
+    // Use ID to assign a deterministic slot
+    final int slotOffset = contact.id % windowSize;
+    final int targetHour = startHour + slotOffset;
+
+    // Allow notification only if current hour is at or after the target hour
+    return now.hour >= targetHour;
   }
 
   Future<void> sendTestNotification() async {
