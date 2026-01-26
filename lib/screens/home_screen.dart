@@ -9,7 +9,8 @@ import '../core/theme.dart';
 import '../providers/database_provider.dart';
 import '../database/database.dart';
 import '../services/call_log_service.dart';
-import '../services/notification_service.dart';
+import 'package:call_monitor/services/notification_service.dart';
+import 'package:drift/drift.dart' as drift;
 import 'settings_screen.dart';
 import 'reminders_log_screen.dart';
 
@@ -186,13 +187,19 @@ class HeaderSection extends StatelessWidget {
   }
 }
 
-class ContactListItem extends StatelessWidget {
+class ContactListItem extends ConsumerStatefulWidget {
   final TrackedContact contact;
 
   const ContactListItem({super.key, required this.contact});
 
   @override
+  ConsumerState<ContactListItem> createState() => _ContactListItemState();
+}
+
+class _ContactListItemState extends ConsumerState<ContactListItem> {
+  @override
   Widget build(BuildContext context) {
+    final contact = widget.contact;
     final lastCalled = contact.lastCalled;
     final now = DateTime.now();
     int daysSince;
@@ -241,11 +248,41 @@ class ContactListItem extends StatelessWidget {
               ],
             ),
           ),
-          if (isOverdue)
-            const StatusBadge(isTime: true)
-          else
-            const StatusBadge(isTime: false),
-          const SizedBox(width: 12),
+          StatusBadge(isTime: isOverdue),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Confirm Interaction'),
+                  content: Text(
+                      'Are you sure you want to mark your interaction with ${contact.name} as done?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Confirm'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                final db = ref.read(databaseProvider);
+                await db.updateTrackedContact(
+                  contact.copyWith(lastCalled: drift.Value(DateTime.now())),
+                );
+              }
+            },
+            icon: const Icon(Icons.check_circle_outline),
+            tooltip: 'Already Talked',
+            color: AppTheme.primaryColor,
+          ),
+          const SizedBox(width: 4),
           IconButton(
             onPressed: () async {
               final phone = contact.phoneNumber.replaceAll(RegExp(r'\s+'), '');
@@ -263,6 +300,7 @@ class ContactListItem extends StatelessWidget {
               }
             },
             icon: const Icon(Icons.call),
+            tooltip: 'Call',
           ),
         ],
       ),
