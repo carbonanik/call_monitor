@@ -3,7 +3,6 @@
 import 'dart:math';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:ui';
 import 'package:drift/drift.dart' as drift;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/widgets.dart';

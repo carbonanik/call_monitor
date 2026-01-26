@@ -62,13 +62,14 @@ class RemindersLogScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor.withOpacity(0.5),
+                  color: AppTheme.surfaceColor.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      backgroundColor:
+                          AppTheme.primaryColor.withValues(alpha: 0.1),
                       child: const Icon(Icons.notifications_active_rounded,
                           color: AppTheme.primaryColor, size: 20),
                     ),

@@ -30,7 +30,7 @@ class ManageRemindersScreen extends ConsumerWidget {
                         contact.copyWith(remindersEnabled: val),
                       );
                 },
-                activeColor: AppTheme.primaryColor,
+                activeThumbColor: AppTheme.primaryColor,
               ),
             );
           },

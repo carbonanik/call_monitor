@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const primaryColor = Color(0xFF28A745); // Soft Green
-  static const accentColor =
-      Color(0xFFFF4D67); // Soft Red for the heart/urgency
+  static const primaryColor = Color(0xFF28A745);
+  static const accentColor = Color(0xFFFF4D67);
   static const backgroundColor = Colors.white;
   static const textColor = Color(0xFF2D3142);
   static const secondaryTextColor = Color(0xFF9C9EB9);

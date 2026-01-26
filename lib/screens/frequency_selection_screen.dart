@@ -165,7 +165,7 @@ class _ContactFrequencyCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor.withOpacity(0.5),
+        color: AppTheme.surfaceColor.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
       ),
       padding: const EdgeInsets.all(16),
@@ -176,7 +176,7 @@ class _ContactFrequencyCard extends StatelessWidget {
             children: [
               // ListAvatar(contact: contact),
               CircleAvatar(
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                 child: Text(
                   contact.displayName.isNotEmpty ? contact.displayName[0] : '?',
                   style: const TextStyle(

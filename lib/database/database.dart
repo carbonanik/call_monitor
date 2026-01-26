@@ -21,8 +21,6 @@ class TrackedContacts extends Table {
 
 @DriftDatabase(tables: [TrackedContacts])
 class AppDatabase extends _$AppDatabase {
-  // AppDatabase() : super(_openConnection());
-
   AppDatabase._internal() : super(_openConnection());
 
   static final AppDatabase instance = AppDatabase._internal();

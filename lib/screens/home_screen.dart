@@ -3,7 +3,6 @@ import 'package:call_monitor/components/list_avater.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:call_monitor/screens/contact_selection_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
@@ -281,8 +280,8 @@ class StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: isTime
-            ? AppTheme.accentColor.withOpacity(0.1)
-            : AppTheme.primaryColor.withOpacity(0.1),
+            ? AppTheme.accentColor.withValues(alpha: 0.1)
+            : AppTheme.primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
