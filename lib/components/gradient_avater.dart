@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:call_monitor/core/theme.dart';
 
-class ListAvatar extends StatelessWidget {
+class GradientAvatar extends StatelessWidget {
   final String displayName;
-  const ListAvatar({super.key, required this.displayName});
+  const GradientAvatar({super.key, required this.displayName});
 
   @override
   Widget build(BuildContext context) {

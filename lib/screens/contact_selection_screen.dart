@@ -1,4 +1,4 @@
-import 'package:call_monitor/components/list_avater.dart';
+import 'package:call_monitor/components/gradient_avater.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,8 +159,8 @@ class _ContactSelectionScreenState
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              leading:
-                                  ListAvatar(displayName: contact.displayName),
+                              leading: GradientAvatar(
+                                  displayName: contact.displayName),
                               title: Text(contact.displayName),
                               subtitle: Text(contact.phones.isNotEmpty
                                   ? contact.phones.first.number

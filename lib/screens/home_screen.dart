@@ -1,5 +1,5 @@
 import 'package:call_monitor/components/gradient_button.dart';
-import 'package:call_monitor/components/list_avater.dart';
+import 'package:call_monitor/components/gradient_avater.dart';
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:call_monitor/screens/contact_selection_screen.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +42,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await notificationService.requestPermission();
 
     await callLogService.syncCallLogs();
+
+    ref.invalidate(trackedContactsStreamProvider);
 
     // After syncing, check if any notifications should be triggered
     // final contacts = await db.getAllTrackedContacts();
@@ -197,9 +199,167 @@ class ContactListItem extends ConsumerStatefulWidget {
 }
 
 class _ContactListItemState extends ConsumerState<ContactListItem> {
+  final List<Map<String, dynamic>> _frequencyOptions = [
+    {'label': 'Everyday', 'days': 1},
+    {'label': 'Every 3 days', 'days': 3},
+    {'label': 'Weekly', 'days': 7},
+    {'label': 'Every 2 weeks', 'days': 14},
+    {'label': 'Monthly', 'days': 30},
+  ];
+
+  void _showEditModal(BuildContext context) {
+    final contact = widget.contact;
+    final nicknameController = TextEditingController(text: contact.nickname);
+    int selectedFrequency = contact.frequencyDays;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Edit contact',
+                      style: AppTheme.lightTheme.textTheme.titleLarge),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nicknameController,
+                decoration: InputDecoration(
+                  labelText: 'Nickname',
+                  hintText: 'e.g. Mom, Bestie...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Reminder Frequency',
+                  style: AppTheme.lightTheme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _frequencyOptions.map((opt) {
+                  final isSelected = selectedFrequency == opt['days'];
+                  return ChoiceChip(
+                    label: Text(opt['label']),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setModalState(() => selectedFrequency = opt['days']);
+                      }
+                    },
+                    selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                    checkmarkColor: AppTheme.primaryColor,
+                    labelStyle: TextStyle(
+                      color:
+                          isSelected ? AppTheme.primaryColor : Colors.black87,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () async {
+                        final confirmed = await _confirmDelete(context);
+                        if (confirmed == true && mounted) {
+                          Navigator.pop(context); // Close modal
+                          final db = ref.read(databaseProvider);
+                          await db.deleteTrackedContact(contact.id);
+                        }
+                      },
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Remove'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: GradientButton(
+                      text: 'Save changes',
+                      onPressed: () async {
+                        final db = ref.read(databaseProvider);
+                        await db.updateTrackedContact(
+                          contact.copyWith(
+                            nickname:
+                                drift.Value(nicknameController.text.trim()),
+                            frequencyDays: selectedFrequency,
+                          ),
+                        );
+                        if (mounted) Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Contact?'),
+        content: Text(
+            'Are you sure you want to stop tracking calls for ${widget.contact.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final contact = widget.contact;
+    final displayName =
+        (contact.nickname != null && contact.nickname!.isNotEmpty)
+            ? contact.nickname!
+            : contact.name;
     final lastCalled = contact.lastCalled;
     final now = DateTime.now();
     int daysSince;
@@ -207,7 +367,6 @@ class _ContactListItemState extends ConsumerState<ContactListItem> {
     if (lastCalled == null) {
       daysSince = 999;
     } else {
-      // Calculate days difference accurately
       final difference = now.difference(lastCalled);
       daysSince = difference.inDays;
     }
@@ -218,89 +377,240 @@ class _ContactListItemState extends ConsumerState<ContactListItem> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        // color: AppTheme.surfaceColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          ListAvatar(displayName: contact.name),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  contact.name,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  'Last called: ${daysSince == 999 ? "Never" : (daysSince == 0 ? "Today" : (daysSince == 1 ? "Yesterday" : "$daysSince days ago"))}',
-                  style: AppTheme.lightTheme.textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-          StatusBadge(isTime: isOverdue),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Confirm Interaction'),
-                  content: Text(
-                      'Are you sure you want to mark your interaction with ${contact.name} as done?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
+          Row(
+            children: [
+              Container(
+                decoration: isOverdue
+                    ? BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.08)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.accentColor.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      )
+                    : BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.08)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                child: GradientAvatar(displayName: displayName),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Confirm'),
+                    if (contact.nickname != null &&
+                        contact.nickname!.isNotEmpty)
+                      Text(
+                        contact.name,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.secondaryTextColor
+                              .withValues(alpha: 0.8),
+                        ),
+                      ),
+                    Text(
+                      'Last called: ${daysSince == 999 ? "Never" : (daysSince == 0 ? "Today" : (daysSince == 1 ? "Yesterday" : "$daysSince days ago"))}',
+                      style: AppTheme.lightTheme.textTheme.bodyMedium,
                     ),
                   ],
                 ),
-              );
-
-              if (confirmed == true) {
-                final db = ref.read(databaseProvider);
-                await db.updateTrackedContact(
-                  contact.copyWith(lastCalled: drift.Value(DateTime.now())),
-                );
-              }
-            },
-            icon: const Icon(Icons.check_circle_outline),
-            tooltip: 'Already Talked',
-            color: AppTheme.primaryColor,
+              ),
+              StatusBadge(isTime: isOverdue),
+              IconButton(
+                onPressed: () => _showEditModal(context),
+                icon: const Icon(Icons.more_vert, size: 20),
+                color: AppTheme.secondaryTextColor,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: () async {
-              final phone = contact.phoneNumber.replaceAll(RegExp(r'\s+'), '');
-              final uri = Uri.parse(
-                phone.startsWith('+') ? 'tel:$phone' : 'tel:+$phone',
-              );
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Expanded(
+                child: IconButton.filledTonal(
+                  style: IconButton.styleFrom(
+                    backgroundColor:
+                        AppTheme.primaryColor.withValues(alpha: 0.1),
+                    foregroundColor: AppTheme.primaryColor,
+                  ),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Already Talked?'),
+                        content: Text('Did you call ${contact.name} today?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Mark called'),
+                          ),
+                        ],
+                      ),
+                    );
 
-              try {
-                await launchUrl(
-                  uri,
-                  mode: LaunchMode.externalApplication,
-                );
-              } catch (e) {
-                print('Failed to launch dialer: $e');
-              }
-            },
-            icon: const Icon(Icons.call),
-            tooltip: 'Call',
+                    if (confirmed == true) {
+                      final db = ref.read(databaseProvider);
+                      await db.updateTrackedContact(
+                        contact.copyWith(
+                            lastCalled: drift.Value(DateTime.now())),
+                      );
+                    }
+                  },
+                  icon: const Row(
+                    children: [
+                      Icon(Icons.check_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        'Already Talked',
+                        style: TextStyle(color: AppTheme.primaryColor),
+                      ),
+                    ],
+                  ),
+                  tooltip: 'Already Talked',
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: IconButton.filled(
+                  onPressed: () async {
+                    final phone =
+                        contact.phoneNumber.replaceAll(RegExp(r'\s+'), '');
+                    final uri = Uri.parse(
+                      phone.startsWith('+') ? 'tel:$phone' : 'tel:+$phone',
+                    );
+
+                    try {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } catch (e) {
+                      print('Failed to launch dialer: $e');
+                    }
+                  },
+                  icon: const Row(
+                    children: [
+                      SizedBox(width: 8),
+                      Icon(Icons.call),
+                      SizedBox(width: 8),
+                      Text(
+                        'Call',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  tooltip: 'Call',
+                ),
+              ),
+              // Expanded(
+              //   child: OutlinedButton.icon(
+              //     onPressed: () async {
+              //       final confirmed = await showDialog<bool>(
+              //         context: context,
+              //         builder: (context) => AlertDialog(
+              //           title: const Text('Confirm Interaction'),
+              //           content: Text(
+              //               'Are you sure you want to mark your interaction with $displayName as done?'),
+              //           actions: [
+              //             TextButton(
+              //               onPressed: () => Navigator.of(context).pop(false),
+              //               child: const Text('Cancel'),
+              //             ),
+              //             TextButton(
+              //               onPressed: () => Navigator.of(context).pop(true),
+              //               child: const Text('Confirm'),
+              //             ),
+              //           ],
+              //         ),
+              //       );
+
+              //       if (confirmed == true) {
+              //         final db = ref.read(databaseProvider);
+              //         await db.updateTrackedContact(
+              //           contact.copyWith(
+              //               lastCalled: drift.Value(DateTime.now())),
+              //         );
+              //       }
+              //     },
+              //     icon: const Icon(Icons.done_all, size: 18),
+              //     label: const Text('Mark called'),
+              //     style: OutlinedButton.styleFrom(
+              //       foregroundColor: AppTheme.primaryColor,
+              //       side: const BorderSide(color: AppTheme.primaryColor),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(width: 12),
+              // Expanded(
+              //   child: ElevatedButton.icon(
+              //     onPressed: () async {
+              //       final phone =
+              //           contact.phoneNumber.replaceAll(RegExp(r'\D'), '');
+              //       final uri = Uri.parse('tel:$phone');
+
+              //       try {
+              //         await launchUrl(
+              //           uri,
+              //           mode: LaunchMode.externalApplication,
+              //         );
+              //       } catch (e) {
+              //         debugPrint('Failed to launch dialer: $e');
+              //       }
+              //     },
+              //     icon: const Icon(Icons.call, size: 18),
+              //     label: const Text('Call now'),
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: AppTheme.primaryColor,
+              //       foregroundColor: Colors.white,
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
           ),
         ],
       ),

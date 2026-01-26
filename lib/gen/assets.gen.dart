@@ -30,13 +30,23 @@ class $AssetsImagesGen {
   AssetGenImage get logoTextAlpha =>
       const AssetGenImage('assets/images/logo_text_alpha.png');
 
-  /// File path: assets/images/splash_art.png
-  AssetGenImage get splashArt =>
-      const AssetGenImage('assets/images/splash_art.png');
+  /// File path: assets/images/onboarding_art_1.png
+  AssetGenImage get onboardingArt1 =>
+      const AssetGenImage('assets/images/onboarding_art_1.png');
+
+  /// File path: assets/images/onboarding_art_2.png
+  AssetGenImage get onboardingArt2 =>
+      const AssetGenImage('assets/images/onboarding_art_2.png');
 
   /// List of all assets
-  List<AssetGenImage> get values =>
-      [logoIcon, logoIconText, logoText, logoTextAlpha, splashArt];
+  List<AssetGenImage> get values => [
+        logoIcon,
+        logoIconText,
+        logoText,
+        logoTextAlpha,
+        onboardingArt1,
+        onboardingArt2
+      ];
 }
 
 class Assets {

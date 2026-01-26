@@ -90,7 +90,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           const Spacer(),
           Assets.images.logoIconText.image(width: 200, height: 200),
-          const SizedBox(height: 42),
+          const SizedBox(height: 24),
+          Assets.images.onboardingArt1.image(
+            width: 200,
+            height: 200,
+          ),
+          const SizedBox(height: 24),
           Text(
             'Stay connected with the people who matter — without stress, guilt, or noise.',
             textAlign: TextAlign.center,
@@ -121,6 +126,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ?.copyWith(fontSize: 28),
           ),
           const SizedBox(height: 32),
+          Assets.images.onboardingArt2.image(),
+          const SizedBox(height: 24),
           _buildBulletItem(
             Icons.wb_sunny_outlined,
             'Start the day with a gentle reminder',
