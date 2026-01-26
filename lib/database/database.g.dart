@@ -482,16 +482,351 @@ class TrackedContactsCompanion extends UpdateCompanion<TrackedContact> {
   }
 }
 
+class $NotificationStatsTable extends NotificationStats
+    with TableInfo<$NotificationStatsTable, NotificationStat> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NotificationStatsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _morningSentMeta =
+      const VerificationMeta('morningSent');
+  @override
+  late final GeneratedColumn<bool> morningSent = GeneratedColumn<bool>(
+      'morning_sent', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("morning_sent" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _dayNudgeSentMeta =
+      const VerificationMeta('dayNudgeSent');
+  @override
+  late final GeneratedColumn<bool> dayNudgeSent = GeneratedColumn<bool>(
+      'day_nudge_sent', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("day_nudge_sent" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _eveningSentMeta =
+      const VerificationMeta('eveningSent');
+  @override
+  late final GeneratedColumn<bool> eveningSent = GeneratedColumn<bool>(
+      'evening_sent', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("evening_sent" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _nudgedContactIdsMeta =
+      const VerificationMeta('nudgedContactIds');
+  @override
+  late final GeneratedColumn<String> nudgedContactIds = GeneratedColumn<String>(
+      'nudged_contact_ids', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [date, morningSent, dayNudgeSent, eveningSent, nudgedContactIds];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notification_stats';
+  @override
+  VerificationContext validateIntegrity(Insertable<NotificationStat> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('morning_sent')) {
+      context.handle(
+          _morningSentMeta,
+          morningSent.isAcceptableOrUnknown(
+              data['morning_sent']!, _morningSentMeta));
+    }
+    if (data.containsKey('day_nudge_sent')) {
+      context.handle(
+          _dayNudgeSentMeta,
+          dayNudgeSent.isAcceptableOrUnknown(
+              data['day_nudge_sent']!, _dayNudgeSentMeta));
+    }
+    if (data.containsKey('evening_sent')) {
+      context.handle(
+          _eveningSentMeta,
+          eveningSent.isAcceptableOrUnknown(
+              data['evening_sent']!, _eveningSentMeta));
+    }
+    if (data.containsKey('nudged_contact_ids')) {
+      context.handle(
+          _nudgedContactIdsMeta,
+          nudgedContactIds.isAcceptableOrUnknown(
+              data['nudged_contact_ids']!, _nudgedContactIdsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {date};
+  @override
+  NotificationStat map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NotificationStat(
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      morningSent: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}morning_sent'])!,
+      dayNudgeSent: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}day_nudge_sent'])!,
+      eveningSent: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}evening_sent'])!,
+      nudgedContactIds: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}nudged_contact_ids']),
+    );
+  }
+
+  @override
+  $NotificationStatsTable createAlias(String alias) {
+    return $NotificationStatsTable(attachedDatabase, alias);
+  }
+}
+
+class NotificationStat extends DataClass
+    implements Insertable<NotificationStat> {
+  final DateTime date;
+  final bool morningSent;
+  final bool dayNudgeSent;
+  final bool eveningSent;
+  final String? nudgedContactIds;
+  const NotificationStat(
+      {required this.date,
+      required this.morningSent,
+      required this.dayNudgeSent,
+      required this.eveningSent,
+      this.nudgedContactIds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['date'] = Variable<DateTime>(date);
+    map['morning_sent'] = Variable<bool>(morningSent);
+    map['day_nudge_sent'] = Variable<bool>(dayNudgeSent);
+    map['evening_sent'] = Variable<bool>(eveningSent);
+    if (!nullToAbsent || nudgedContactIds != null) {
+      map['nudged_contact_ids'] = Variable<String>(nudgedContactIds);
+    }
+    return map;
+  }
+
+  NotificationStatsCompanion toCompanion(bool nullToAbsent) {
+    return NotificationStatsCompanion(
+      date: Value(date),
+      morningSent: Value(morningSent),
+      dayNudgeSent: Value(dayNudgeSent),
+      eveningSent: Value(eveningSent),
+      nudgedContactIds: nudgedContactIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nudgedContactIds),
+    );
+  }
+
+  factory NotificationStat.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NotificationStat(
+      date: serializer.fromJson<DateTime>(json['date']),
+      morningSent: serializer.fromJson<bool>(json['morningSent']),
+      dayNudgeSent: serializer.fromJson<bool>(json['dayNudgeSent']),
+      eveningSent: serializer.fromJson<bool>(json['eveningSent']),
+      nudgedContactIds: serializer.fromJson<String?>(json['nudgedContactIds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'date': serializer.toJson<DateTime>(date),
+      'morningSent': serializer.toJson<bool>(morningSent),
+      'dayNudgeSent': serializer.toJson<bool>(dayNudgeSent),
+      'eveningSent': serializer.toJson<bool>(eveningSent),
+      'nudgedContactIds': serializer.toJson<String?>(nudgedContactIds),
+    };
+  }
+
+  NotificationStat copyWith(
+          {DateTime? date,
+          bool? morningSent,
+          bool? dayNudgeSent,
+          bool? eveningSent,
+          Value<String?> nudgedContactIds = const Value.absent()}) =>
+      NotificationStat(
+        date: date ?? this.date,
+        morningSent: morningSent ?? this.morningSent,
+        dayNudgeSent: dayNudgeSent ?? this.dayNudgeSent,
+        eveningSent: eveningSent ?? this.eveningSent,
+        nudgedContactIds: nudgedContactIds.present
+            ? nudgedContactIds.value
+            : this.nudgedContactIds,
+      );
+  NotificationStat copyWithCompanion(NotificationStatsCompanion data) {
+    return NotificationStat(
+      date: data.date.present ? data.date.value : this.date,
+      morningSent:
+          data.morningSent.present ? data.morningSent.value : this.morningSent,
+      dayNudgeSent: data.dayNudgeSent.present
+          ? data.dayNudgeSent.value
+          : this.dayNudgeSent,
+      eveningSent:
+          data.eveningSent.present ? data.eveningSent.value : this.eveningSent,
+      nudgedContactIds: data.nudgedContactIds.present
+          ? data.nudgedContactIds.value
+          : this.nudgedContactIds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationStat(')
+          ..write('date: $date, ')
+          ..write('morningSent: $morningSent, ')
+          ..write('dayNudgeSent: $dayNudgeSent, ')
+          ..write('eveningSent: $eveningSent, ')
+          ..write('nudgedContactIds: $nudgedContactIds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      date, morningSent, dayNudgeSent, eveningSent, nudgedContactIds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NotificationStat &&
+          other.date == this.date &&
+          other.morningSent == this.morningSent &&
+          other.dayNudgeSent == this.dayNudgeSent &&
+          other.eveningSent == this.eveningSent &&
+          other.nudgedContactIds == this.nudgedContactIds);
+}
+
+class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
+  final Value<DateTime> date;
+  final Value<bool> morningSent;
+  final Value<bool> dayNudgeSent;
+  final Value<bool> eveningSent;
+  final Value<String?> nudgedContactIds;
+  final Value<int> rowid;
+  const NotificationStatsCompanion({
+    this.date = const Value.absent(),
+    this.morningSent = const Value.absent(),
+    this.dayNudgeSent = const Value.absent(),
+    this.eveningSent = const Value.absent(),
+    this.nudgedContactIds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NotificationStatsCompanion.insert({
+    required DateTime date,
+    this.morningSent = const Value.absent(),
+    this.dayNudgeSent = const Value.absent(),
+    this.eveningSent = const Value.absent(),
+    this.nudgedContactIds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : date = Value(date);
+  static Insertable<NotificationStat> custom({
+    Expression<DateTime>? date,
+    Expression<bool>? morningSent,
+    Expression<bool>? dayNudgeSent,
+    Expression<bool>? eveningSent,
+    Expression<String>? nudgedContactIds,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (date != null) 'date': date,
+      if (morningSent != null) 'morning_sent': morningSent,
+      if (dayNudgeSent != null) 'day_nudge_sent': dayNudgeSent,
+      if (eveningSent != null) 'evening_sent': eveningSent,
+      if (nudgedContactIds != null) 'nudged_contact_ids': nudgedContactIds,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NotificationStatsCompanion copyWith(
+      {Value<DateTime>? date,
+      Value<bool>? morningSent,
+      Value<bool>? dayNudgeSent,
+      Value<bool>? eveningSent,
+      Value<String?>? nudgedContactIds,
+      Value<int>? rowid}) {
+    return NotificationStatsCompanion(
+      date: date ?? this.date,
+      morningSent: morningSent ?? this.morningSent,
+      dayNudgeSent: dayNudgeSent ?? this.dayNudgeSent,
+      eveningSent: eveningSent ?? this.eveningSent,
+      nudgedContactIds: nudgedContactIds ?? this.nudgedContactIds,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (morningSent.present) {
+      map['morning_sent'] = Variable<bool>(morningSent.value);
+    }
+    if (dayNudgeSent.present) {
+      map['day_nudge_sent'] = Variable<bool>(dayNudgeSent.value);
+    }
+    if (eveningSent.present) {
+      map['evening_sent'] = Variable<bool>(eveningSent.value);
+    }
+    if (nudgedContactIds.present) {
+      map['nudged_contact_ids'] = Variable<String>(nudgedContactIds.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationStatsCompanion(')
+          ..write('date: $date, ')
+          ..write('morningSent: $morningSent, ')
+          ..write('dayNudgeSent: $dayNudgeSent, ')
+          ..write('eveningSent: $eveningSent, ')
+          ..write('nudgedContactIds: $nudgedContactIds, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $TrackedContactsTable trackedContacts =
       $TrackedContactsTable(this);
+  late final $NotificationStatsTable notificationStats =
+      $NotificationStatsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [trackedContacts];
+  List<DatabaseSchemaEntity> get allSchemaEntities =>
+      [trackedContacts, notificationStats];
 }
 
 typedef $$TrackedContactsTableCreateCompanionBuilder = TrackedContactsCompanion
@@ -726,10 +1061,190 @@ typedef $$TrackedContactsTableProcessedTableManager = ProcessedTableManager<
     ),
     TrackedContact,
     PrefetchHooks Function()>;
+typedef $$NotificationStatsTableCreateCompanionBuilder
+    = NotificationStatsCompanion Function({
+  required DateTime date,
+  Value<bool> morningSent,
+  Value<bool> dayNudgeSent,
+  Value<bool> eveningSent,
+  Value<String?> nudgedContactIds,
+  Value<int> rowid,
+});
+typedef $$NotificationStatsTableUpdateCompanionBuilder
+    = NotificationStatsCompanion Function({
+  Value<DateTime> date,
+  Value<bool> morningSent,
+  Value<bool> dayNudgeSent,
+  Value<bool> eveningSent,
+  Value<String?> nudgedContactIds,
+  Value<int> rowid,
+});
+
+class $$NotificationStatsTableFilterComposer
+    extends Composer<_$AppDatabase, $NotificationStatsTable> {
+  $$NotificationStatsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get morningSent => $composableBuilder(
+      column: $table.morningSent, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get dayNudgeSent => $composableBuilder(
+      column: $table.dayNudgeSent, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get eveningSent => $composableBuilder(
+      column: $table.eveningSent, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nudgedContactIds => $composableBuilder(
+      column: $table.nudgedContactIds,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$NotificationStatsTableOrderingComposer
+    extends Composer<_$AppDatabase, $NotificationStatsTable> {
+  $$NotificationStatsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get morningSent => $composableBuilder(
+      column: $table.morningSent, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get dayNudgeSent => $composableBuilder(
+      column: $table.dayNudgeSent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get eveningSent => $composableBuilder(
+      column: $table.eveningSent, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nudgedContactIds => $composableBuilder(
+      column: $table.nudgedContactIds,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$NotificationStatsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NotificationStatsTable> {
+  $$NotificationStatsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<bool> get morningSent => $composableBuilder(
+      column: $table.morningSent, builder: (column) => column);
+
+  GeneratedColumn<bool> get dayNudgeSent => $composableBuilder(
+      column: $table.dayNudgeSent, builder: (column) => column);
+
+  GeneratedColumn<bool> get eveningSent => $composableBuilder(
+      column: $table.eveningSent, builder: (column) => column);
+
+  GeneratedColumn<String> get nudgedContactIds => $composableBuilder(
+      column: $table.nudgedContactIds, builder: (column) => column);
+}
+
+class $$NotificationStatsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NotificationStatsTable,
+    NotificationStat,
+    $$NotificationStatsTableFilterComposer,
+    $$NotificationStatsTableOrderingComposer,
+    $$NotificationStatsTableAnnotationComposer,
+    $$NotificationStatsTableCreateCompanionBuilder,
+    $$NotificationStatsTableUpdateCompanionBuilder,
+    (
+      NotificationStat,
+      BaseReferences<_$AppDatabase, $NotificationStatsTable, NotificationStat>
+    ),
+    NotificationStat,
+    PrefetchHooks Function()> {
+  $$NotificationStatsTableTableManager(
+      _$AppDatabase db, $NotificationStatsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NotificationStatsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NotificationStatsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NotificationStatsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<DateTime> date = const Value.absent(),
+            Value<bool> morningSent = const Value.absent(),
+            Value<bool> dayNudgeSent = const Value.absent(),
+            Value<bool> eveningSent = const Value.absent(),
+            Value<String?> nudgedContactIds = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NotificationStatsCompanion(
+            date: date,
+            morningSent: morningSent,
+            dayNudgeSent: dayNudgeSent,
+            eveningSent: eveningSent,
+            nudgedContactIds: nudgedContactIds,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required DateTime date,
+            Value<bool> morningSent = const Value.absent(),
+            Value<bool> dayNudgeSent = const Value.absent(),
+            Value<bool> eveningSent = const Value.absent(),
+            Value<String?> nudgedContactIds = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NotificationStatsCompanion.insert(
+            date: date,
+            morningSent: morningSent,
+            dayNudgeSent: dayNudgeSent,
+            eveningSent: eveningSent,
+            nudgedContactIds: nudgedContactIds,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$NotificationStatsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $NotificationStatsTable,
+    NotificationStat,
+    $$NotificationStatsTableFilterComposer,
+    $$NotificationStatsTableOrderingComposer,
+    $$NotificationStatsTableAnnotationComposer,
+    $$NotificationStatsTableCreateCompanionBuilder,
+    $$NotificationStatsTableUpdateCompanionBuilder,
+    (
+      NotificationStat,
+      BaseReferences<_$AppDatabase, $NotificationStatsTable, NotificationStat>
+    ),
+    NotificationStat,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$TrackedContactsTableTableManager get trackedContacts =>
       $$TrackedContactsTableTableManager(_db, _db.trackedContacts);
+  $$NotificationStatsTableTableManager get notificationStats =>
+      $$NotificationStatsTableTableManager(_db, _db.notificationStats);
 }

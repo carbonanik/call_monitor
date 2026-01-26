@@ -19,14 +19,25 @@ class TrackedContacts extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-@DriftDatabase(tables: [TrackedContacts])
+class NotificationStats extends Table {
+  DateTimeColumn get date => dateTime()();
+  BoolColumn get morningSent => boolean().withDefault(const Constant(false))();
+  BoolColumn get dayNudgeSent => boolean().withDefault(const Constant(false))();
+  BoolColumn get eveningSent => boolean().withDefault(const Constant(false))();
+  TextColumn get nudgedContactIds => text().nullable()(); // JSON list of IDs
+
+  @override
+  Set<Column> get primaryKey => {date};
+}
+
+@DriftDatabase(tables: [TrackedContacts, NotificationStats])
 class AppDatabase extends _$AppDatabase {
   AppDatabase._internal() : super(_openConnection());
 
   static final AppDatabase instance = AppDatabase._internal();
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -42,11 +53,14 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           await m.addColumn(trackedContacts, trackedContacts.lastNotified);
         }
+        if (from < 4) {
+          await m.createTable(notificationStats);
+        }
       },
     );
   }
 
-  // CRUD operations
+  // CRUD operations for TrackedContacts
   Future<List<TrackedContact>> getAllTrackedContacts() =>
       select(trackedContacts).get();
   Stream<List<TrackedContact>> watchAllTrackedContacts() =>
@@ -61,6 +75,26 @@ class AppDatabase extends _$AppDatabase {
   Future<void> resetLastNotified(int contactId) {
     return (update(trackedContacts)..where((t) => t.id.equals(contactId)))
         .write(const TrackedContactsCompanion(lastNotified: Value.absent()));
+  }
+
+  // Notification Stats operations
+  Future<NotificationStat?> getStatsForDate(DateTime date) {
+    final midnight = DateTime(date.year, date.month, date.day);
+    return (select(notificationStats)..where((t) => t.date.equals(midnight)))
+        .getSingleOrNull();
+  }
+
+  Future<void> upsertStats(NotificationStatsCompanion stats) async {
+    await into(notificationStats).insertOnConflictUpdate(stats);
+  }
+
+  Future<bool> hasUserMadeCallsToday() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final query = select(trackedContacts)
+      ..where((t) => t.lastCalled.isBiggerOrEqualValue(today));
+    final results = await query.get();
+    return results.isNotEmpty;
   }
 
   Future<void> deleteAllData() => delete(trackedContacts).go();
