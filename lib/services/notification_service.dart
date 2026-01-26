@@ -81,6 +81,16 @@ class NotificationService {
       onDidReceiveNotificationResponse: notificationTapHandler,
       onDidReceiveBackgroundNotificationResponse: notificationTapHandler,
     );
+
+    // Check if app was launched from a notification
+    final launchDetails =
+        await _notifications.getNotificationAppLaunchDetails();
+
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      if (launchDetails?.notificationResponse != null) {
+        notificationTapHandler(launchDetails!.notificationResponse!);
+      }
+    }
   }
 
   Future<void> showMorningSummary(List<TrackedContact> overdue) async {
@@ -103,12 +113,14 @@ class NotificationService {
     );
   }
 
-  Future<void> showDaytimeNudge(TrackedContact contact) async {
-    final displayName = contact.nickname ?? contact.name;
-    final messages = NotificationContent.getDaytimeMessages(displayName);
-    final message = messages[Random().nextInt(messages.length)];
-
-    await _showNotification(contact, 0, customMessage: message);
+  Future<void> showDaytimeNudge(TrackedContact contact, DateTime now) async {
+    // final displayName = contact.nickname ?? contact.name;
+    // final messages = NotificationContent.getDaytimeMessages(displayName);
+    // final message = messages[Random().nextInt(messages.length)];
+    final lastCalled = contact.lastCalled;
+    final daysSince =
+        lastCalled != null ? now.difference(lastCalled).inDays : 999;
+    await _showNotification(contact, daysSince);
   }
 
   Future<void> showEveningReflection(bool userCalledToday) async {

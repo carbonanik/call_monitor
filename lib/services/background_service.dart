@@ -89,7 +89,7 @@ class NotificationOrchestrator {
     if (Random().nextBool()) {
       final target = await _pickRandomNudgeTarget(now);
       if (target != null) {
-        await notificationService.showDaytimeNudge(target);
+        await notificationService.showDaytimeNudge(target, now);
         await _updateStats(stats.date,
             dayNudgesCount: stats.dayNudgesCount + 1);
       }
