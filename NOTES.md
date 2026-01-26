@@ -20,7 +20,7 @@ It takes just one call.
 - Can set different frequency
 - Make a more user friendly Notification System
 
-## Advanced Features
+## Advanced Features (Not in MVP-1)
 - Show a hitmap of call over month/year
 - Show a graph that indicate call frequency over time
     (User can understand that he/she is improving or not)
