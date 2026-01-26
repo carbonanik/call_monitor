@@ -503,16 +503,14 @@ class $NotificationStatsTable extends NotificationStats
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("morning_sent" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _dayNudgeSentMeta =
-      const VerificationMeta('dayNudgeSent');
+  static const VerificationMeta _dayNudgesCountMeta =
+      const VerificationMeta('dayNudgesCount');
   @override
-  late final GeneratedColumn<bool> dayNudgeSent = GeneratedColumn<bool>(
-      'day_nudge_sent', aliasedName, false,
-      type: DriftSqlType.bool,
+  late final GeneratedColumn<int> dayNudgesCount = GeneratedColumn<int>(
+      'day_nudges_count', aliasedName, false,
+      type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("day_nudge_sent" IN (0, 1))'),
-      defaultValue: const Constant(false));
+      defaultValue: const Constant(0));
   static const VerificationMeta _eveningSentMeta =
       const VerificationMeta('eveningSent');
   @override
@@ -531,7 +529,7 @@ class $NotificationStatsTable extends NotificationStats
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [date, morningSent, dayNudgeSent, eveningSent, nudgedContactIds];
+      [date, morningSent, dayNudgesCount, eveningSent, nudgedContactIds];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -554,11 +552,11 @@ class $NotificationStatsTable extends NotificationStats
           morningSent.isAcceptableOrUnknown(
               data['morning_sent']!, _morningSentMeta));
     }
-    if (data.containsKey('day_nudge_sent')) {
+    if (data.containsKey('day_nudges_count')) {
       context.handle(
-          _dayNudgeSentMeta,
-          dayNudgeSent.isAcceptableOrUnknown(
-              data['day_nudge_sent']!, _dayNudgeSentMeta));
+          _dayNudgesCountMeta,
+          dayNudgesCount.isAcceptableOrUnknown(
+              data['day_nudges_count']!, _dayNudgesCountMeta));
     }
     if (data.containsKey('evening_sent')) {
       context.handle(
@@ -585,8 +583,8 @@ class $NotificationStatsTable extends NotificationStats
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
       morningSent: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}morning_sent'])!,
-      dayNudgeSent: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}day_nudge_sent'])!,
+      dayNudgesCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}day_nudges_count'])!,
       eveningSent: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}evening_sent'])!,
       nudgedContactIds: attachedDatabase.typeMapping.read(
@@ -604,13 +602,13 @@ class NotificationStat extends DataClass
     implements Insertable<NotificationStat> {
   final DateTime date;
   final bool morningSent;
-  final bool dayNudgeSent;
+  final int dayNudgesCount;
   final bool eveningSent;
   final String? nudgedContactIds;
   const NotificationStat(
       {required this.date,
       required this.morningSent,
-      required this.dayNudgeSent,
+      required this.dayNudgesCount,
       required this.eveningSent,
       this.nudgedContactIds});
   @override
@@ -618,7 +616,7 @@ class NotificationStat extends DataClass
     final map = <String, Expression>{};
     map['date'] = Variable<DateTime>(date);
     map['morning_sent'] = Variable<bool>(morningSent);
-    map['day_nudge_sent'] = Variable<bool>(dayNudgeSent);
+    map['day_nudges_count'] = Variable<int>(dayNudgesCount);
     map['evening_sent'] = Variable<bool>(eveningSent);
     if (!nullToAbsent || nudgedContactIds != null) {
       map['nudged_contact_ids'] = Variable<String>(nudgedContactIds);
@@ -630,7 +628,7 @@ class NotificationStat extends DataClass
     return NotificationStatsCompanion(
       date: Value(date),
       morningSent: Value(morningSent),
-      dayNudgeSent: Value(dayNudgeSent),
+      dayNudgesCount: Value(dayNudgesCount),
       eveningSent: Value(eveningSent),
       nudgedContactIds: nudgedContactIds == null && nullToAbsent
           ? const Value.absent()
@@ -644,7 +642,7 @@ class NotificationStat extends DataClass
     return NotificationStat(
       date: serializer.fromJson<DateTime>(json['date']),
       morningSent: serializer.fromJson<bool>(json['morningSent']),
-      dayNudgeSent: serializer.fromJson<bool>(json['dayNudgeSent']),
+      dayNudgesCount: serializer.fromJson<int>(json['dayNudgesCount']),
       eveningSent: serializer.fromJson<bool>(json['eveningSent']),
       nudgedContactIds: serializer.fromJson<String?>(json['nudgedContactIds']),
     );
@@ -655,7 +653,7 @@ class NotificationStat extends DataClass
     return <String, dynamic>{
       'date': serializer.toJson<DateTime>(date),
       'morningSent': serializer.toJson<bool>(morningSent),
-      'dayNudgeSent': serializer.toJson<bool>(dayNudgeSent),
+      'dayNudgesCount': serializer.toJson<int>(dayNudgesCount),
       'eveningSent': serializer.toJson<bool>(eveningSent),
       'nudgedContactIds': serializer.toJson<String?>(nudgedContactIds),
     };
@@ -664,13 +662,13 @@ class NotificationStat extends DataClass
   NotificationStat copyWith(
           {DateTime? date,
           bool? morningSent,
-          bool? dayNudgeSent,
+          int? dayNudgesCount,
           bool? eveningSent,
           Value<String?> nudgedContactIds = const Value.absent()}) =>
       NotificationStat(
         date: date ?? this.date,
         morningSent: morningSent ?? this.morningSent,
-        dayNudgeSent: dayNudgeSent ?? this.dayNudgeSent,
+        dayNudgesCount: dayNudgesCount ?? this.dayNudgesCount,
         eveningSent: eveningSent ?? this.eveningSent,
         nudgedContactIds: nudgedContactIds.present
             ? nudgedContactIds.value
@@ -681,9 +679,9 @@ class NotificationStat extends DataClass
       date: data.date.present ? data.date.value : this.date,
       morningSent:
           data.morningSent.present ? data.morningSent.value : this.morningSent,
-      dayNudgeSent: data.dayNudgeSent.present
-          ? data.dayNudgeSent.value
-          : this.dayNudgeSent,
+      dayNudgesCount: data.dayNudgesCount.present
+          ? data.dayNudgesCount.value
+          : this.dayNudgesCount,
       eveningSent:
           data.eveningSent.present ? data.eveningSent.value : this.eveningSent,
       nudgedContactIds: data.nudgedContactIds.present
@@ -697,7 +695,7 @@ class NotificationStat extends DataClass
     return (StringBuffer('NotificationStat(')
           ..write('date: $date, ')
           ..write('morningSent: $morningSent, ')
-          ..write('dayNudgeSent: $dayNudgeSent, ')
+          ..write('dayNudgesCount: $dayNudgesCount, ')
           ..write('eveningSent: $eveningSent, ')
           ..write('nudgedContactIds: $nudgedContactIds')
           ..write(')'))
@@ -706,14 +704,14 @@ class NotificationStat extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      date, morningSent, dayNudgeSent, eveningSent, nudgedContactIds);
+      date, morningSent, dayNudgesCount, eveningSent, nudgedContactIds);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is NotificationStat &&
           other.date == this.date &&
           other.morningSent == this.morningSent &&
-          other.dayNudgeSent == this.dayNudgeSent &&
+          other.dayNudgesCount == this.dayNudgesCount &&
           other.eveningSent == this.eveningSent &&
           other.nudgedContactIds == this.nudgedContactIds);
 }
@@ -721,14 +719,14 @@ class NotificationStat extends DataClass
 class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
   final Value<DateTime> date;
   final Value<bool> morningSent;
-  final Value<bool> dayNudgeSent;
+  final Value<int> dayNudgesCount;
   final Value<bool> eveningSent;
   final Value<String?> nudgedContactIds;
   final Value<int> rowid;
   const NotificationStatsCompanion({
     this.date = const Value.absent(),
     this.morningSent = const Value.absent(),
-    this.dayNudgeSent = const Value.absent(),
+    this.dayNudgesCount = const Value.absent(),
     this.eveningSent = const Value.absent(),
     this.nudgedContactIds = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -736,7 +734,7 @@ class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
   NotificationStatsCompanion.insert({
     required DateTime date,
     this.morningSent = const Value.absent(),
-    this.dayNudgeSent = const Value.absent(),
+    this.dayNudgesCount = const Value.absent(),
     this.eveningSent = const Value.absent(),
     this.nudgedContactIds = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -744,7 +742,7 @@ class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
   static Insertable<NotificationStat> custom({
     Expression<DateTime>? date,
     Expression<bool>? morningSent,
-    Expression<bool>? dayNudgeSent,
+    Expression<int>? dayNudgesCount,
     Expression<bool>? eveningSent,
     Expression<String>? nudgedContactIds,
     Expression<int>? rowid,
@@ -752,7 +750,7 @@ class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
     return RawValuesInsertable({
       if (date != null) 'date': date,
       if (morningSent != null) 'morning_sent': morningSent,
-      if (dayNudgeSent != null) 'day_nudge_sent': dayNudgeSent,
+      if (dayNudgesCount != null) 'day_nudges_count': dayNudgesCount,
       if (eveningSent != null) 'evening_sent': eveningSent,
       if (nudgedContactIds != null) 'nudged_contact_ids': nudgedContactIds,
       if (rowid != null) 'rowid': rowid,
@@ -762,14 +760,14 @@ class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
   NotificationStatsCompanion copyWith(
       {Value<DateTime>? date,
       Value<bool>? morningSent,
-      Value<bool>? dayNudgeSent,
+      Value<int>? dayNudgesCount,
       Value<bool>? eveningSent,
       Value<String?>? nudgedContactIds,
       Value<int>? rowid}) {
     return NotificationStatsCompanion(
       date: date ?? this.date,
       morningSent: morningSent ?? this.morningSent,
-      dayNudgeSent: dayNudgeSent ?? this.dayNudgeSent,
+      dayNudgesCount: dayNudgesCount ?? this.dayNudgesCount,
       eveningSent: eveningSent ?? this.eveningSent,
       nudgedContactIds: nudgedContactIds ?? this.nudgedContactIds,
       rowid: rowid ?? this.rowid,
@@ -785,8 +783,8 @@ class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
     if (morningSent.present) {
       map['morning_sent'] = Variable<bool>(morningSent.value);
     }
-    if (dayNudgeSent.present) {
-      map['day_nudge_sent'] = Variable<bool>(dayNudgeSent.value);
+    if (dayNudgesCount.present) {
+      map['day_nudges_count'] = Variable<int>(dayNudgesCount.value);
     }
     if (eveningSent.present) {
       map['evening_sent'] = Variable<bool>(eveningSent.value);
@@ -805,7 +803,7 @@ class NotificationStatsCompanion extends UpdateCompanion<NotificationStat> {
     return (StringBuffer('NotificationStatsCompanion(')
           ..write('date: $date, ')
           ..write('morningSent: $morningSent, ')
-          ..write('dayNudgeSent: $dayNudgeSent, ')
+          ..write('dayNudgesCount: $dayNudgesCount, ')
           ..write('eveningSent: $eveningSent, ')
           ..write('nudgedContactIds: $nudgedContactIds, ')
           ..write('rowid: $rowid')
@@ -1065,7 +1063,7 @@ typedef $$NotificationStatsTableCreateCompanionBuilder
     = NotificationStatsCompanion Function({
   required DateTime date,
   Value<bool> morningSent,
-  Value<bool> dayNudgeSent,
+  Value<int> dayNudgesCount,
   Value<bool> eveningSent,
   Value<String?> nudgedContactIds,
   Value<int> rowid,
@@ -1074,7 +1072,7 @@ typedef $$NotificationStatsTableUpdateCompanionBuilder
     = NotificationStatsCompanion Function({
   Value<DateTime> date,
   Value<bool> morningSent,
-  Value<bool> dayNudgeSent,
+  Value<int> dayNudgesCount,
   Value<bool> eveningSent,
   Value<String?> nudgedContactIds,
   Value<int> rowid,
@@ -1095,8 +1093,9 @@ class $$NotificationStatsTableFilterComposer
   ColumnFilters<bool> get morningSent => $composableBuilder(
       column: $table.morningSent, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get dayNudgeSent => $composableBuilder(
-      column: $table.dayNudgeSent, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get dayNudgesCount => $composableBuilder(
+      column: $table.dayNudgesCount,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get eveningSent => $composableBuilder(
       column: $table.eveningSent, builder: (column) => ColumnFilters(column));
@@ -1121,8 +1120,8 @@ class $$NotificationStatsTableOrderingComposer
   ColumnOrderings<bool> get morningSent => $composableBuilder(
       column: $table.morningSent, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get dayNudgeSent => $composableBuilder(
-      column: $table.dayNudgeSent,
+  ColumnOrderings<int> get dayNudgesCount => $composableBuilder(
+      column: $table.dayNudgesCount,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get eveningSent => $composableBuilder(
@@ -1148,8 +1147,8 @@ class $$NotificationStatsTableAnnotationComposer
   GeneratedColumn<bool> get morningSent => $composableBuilder(
       column: $table.morningSent, builder: (column) => column);
 
-  GeneratedColumn<bool> get dayNudgeSent => $composableBuilder(
-      column: $table.dayNudgeSent, builder: (column) => column);
+  GeneratedColumn<int> get dayNudgesCount => $composableBuilder(
+      column: $table.dayNudgesCount, builder: (column) => column);
 
   GeneratedColumn<bool> get eveningSent => $composableBuilder(
       column: $table.eveningSent, builder: (column) => column);
@@ -1188,7 +1187,7 @@ class $$NotificationStatsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<DateTime> date = const Value.absent(),
             Value<bool> morningSent = const Value.absent(),
-            Value<bool> dayNudgeSent = const Value.absent(),
+            Value<int> dayNudgesCount = const Value.absent(),
             Value<bool> eveningSent = const Value.absent(),
             Value<String?> nudgedContactIds = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -1196,7 +1195,7 @@ class $$NotificationStatsTableTableManager extends RootTableManager<
               NotificationStatsCompanion(
             date: date,
             morningSent: morningSent,
-            dayNudgeSent: dayNudgeSent,
+            dayNudgesCount: dayNudgesCount,
             eveningSent: eveningSent,
             nudgedContactIds: nudgedContactIds,
             rowid: rowid,
@@ -1204,7 +1203,7 @@ class $$NotificationStatsTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required DateTime date,
             Value<bool> morningSent = const Value.absent(),
-            Value<bool> dayNudgeSent = const Value.absent(),
+            Value<int> dayNudgesCount = const Value.absent(),
             Value<bool> eveningSent = const Value.absent(),
             Value<String?> nudgedContactIds = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -1212,7 +1211,7 @@ class $$NotificationStatsTableTableManager extends RootTableManager<
               NotificationStatsCompanion.insert(
             date: date,
             morningSent: morningSent,
-            dayNudgeSent: dayNudgeSent,
+            dayNudgesCount: dayNudgesCount,
             eveningSent: eveningSent,
             nudgedContactIds: nudgedContactIds,
             rowid: rowid,

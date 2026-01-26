@@ -33,10 +33,13 @@ class NotificationOrchestrator {
   final NotificationService notificationService;
   final CallLogService callLogService;
 
+  final int maxDailyNudges;
+
   NotificationOrchestrator({
     required this.db,
     required this.notificationService,
     required this.callLogService,
+    this.maxDailyNudges = 3,
   });
 
   Future<void> runDailyCheck() async {
@@ -56,7 +59,7 @@ class NotificationOrchestrator {
         NotificationStat(
           date: DateTime(now.year, now.month, now.day),
           morningSent: false,
-          dayNudgeSent: false,
+          dayNudgesCount: 0,
           eveningSent: false,
         );
   }
@@ -74,12 +77,12 @@ class NotificationOrchestrator {
   }
 
   Future<void> _handleDaytimeNudge(DateTime now, NotificationStat stats) async {
-    if (stats.dayNudgeSent || !stats.morningSent) return;
+    if (stats.dayNudgesCount >= maxDailyNudges || !stats.morningSent) return;
     if (!_isInWindow(now, 11, 0, 18, 0)) return;
 
     if (await db.hasUserMadeCallsToday()) {
-      // Mark as done for today anyway to prevent multiple checks
-      await _updateStats(stats.date, dayNudgeSent: true);
+      // Mark as done (max out the count) for today to prevent multiple checks
+      await _updateStats(stats.date, dayNudgesCount: maxDailyNudges);
       return;
     }
 
@@ -87,9 +90,10 @@ class NotificationOrchestrator {
       final target = await _pickRandomNudgeTarget(now);
       if (target != null) {
         await notificationService.showDaytimeNudge(target);
+        await _updateStats(stats.date,
+            dayNudgesCount: stats.dayNudgesCount + 1);
       }
     }
-    await _updateStats(stats.date, dayNudgeSent: true);
   }
 
   Future<void> _handleEveningReflection(
@@ -132,14 +136,14 @@ class NotificationOrchestrator {
   }
 
   Future<void> _updateStats(DateTime date,
-      {bool? morningSent, bool? dayNudgeSent, bool? eveningSent}) async {
+      {bool? morningSent, int? dayNudgesCount, bool? eveningSent}) async {
     await db.upsertStats(NotificationStatsCompanion(
       date: drift.Value(date),
       morningSent: morningSent != null
           ? drift.Value(morningSent)
           : const drift.Value.absent(),
-      dayNudgeSent: dayNudgeSent != null
-          ? drift.Value(dayNudgeSent)
+      dayNudgesCount: dayNudgesCount != null
+          ? drift.Value(dayNudgesCount)
           : const drift.Value.absent(),
       eveningSent: eveningSent != null
           ? drift.Value(eveningSent)

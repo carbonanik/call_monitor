@@ -22,7 +22,7 @@ class TrackedContacts extends Table {
 class NotificationStats extends Table {
   DateTimeColumn get date => dateTime()();
   BoolColumn get morningSent => boolean().withDefault(const Constant(false))();
-  BoolColumn get dayNudgeSent => boolean().withDefault(const Constant(false))();
+  IntColumn get dayNudgesCount => integer().withDefault(const Constant(0))();
   BoolColumn get eveningSent => boolean().withDefault(const Constant(false))();
   TextColumn get nudgedContactIds => text().nullable()(); // JSON list of IDs
 
@@ -37,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   static final AppDatabase instance = AppDatabase._internal();
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -55,6 +55,13 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 4) {
           await m.createTable(notificationStats);
+        }
+        if (from < 5) {
+          await m.addColumn(
+              notificationStats, notificationStats.dayNudgesCount);
+          // Optional: Migration logic to drop `dayNudgeSent` not strictly supported by drift's `addColumn`,
+          // usually we treat it as adding a new column. Deleting columns is harder in sqlite.
+          // We can just ignore the old column.
         }
       },
     );
