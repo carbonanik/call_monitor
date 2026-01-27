@@ -73,7 +73,8 @@ class NotificationService {
   NotificationService._internal(this.db);
 
   Future<void> init() async {
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidInit =
+        AndroidInitializationSettings('@drawable/ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
 
     await _notifications.initialize(

@@ -14,7 +14,7 @@ It takes just one call.
 # Next (✔️)
 - Can delete the contact from the list
 - Can set different name than the contact name
-- Already Talked button on notification 
+- Already Talked button on notification (❌)
 - Can set different frequency
 - Make a more user friendly Notification System
 
