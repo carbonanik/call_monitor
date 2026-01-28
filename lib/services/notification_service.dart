@@ -242,7 +242,28 @@ void notificationTapHandler(NotificationResponse response) async {
   if (response.payload == null) return;
 
   if (response.actionId == 'call_action' || response.actionId == null) {
+    // Launch dialer
     _launchDialer(response.payload!);
+
+    // Mark contact as called (manual tracking approach)
+    try {
+      final db = AppDatabase.instance;
+      final contacts = await db.getAllTrackedContacts();
+
+      // Find contact by phone number
+      final phoneNumber = response.payload!;
+      final contact = contacts.firstWhere(
+        (c) => c.phoneNumber == phoneNumber,
+        orElse: () => throw Exception('Contact not found'),
+      );
+
+      // Update lastCalled timestamp
+      await db.updateTrackedContact(
+        contact.copyWith(lastCalled: drift.Value(DateTime.now())),
+      );
+    } catch (e) {
+      debugPrint('Failed to update contact after call: $e');
+    }
   }
 }
 

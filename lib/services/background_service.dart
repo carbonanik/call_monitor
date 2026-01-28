@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:drift/drift.dart' as drift;
 import '../database/database.dart';
-import 'call_log_service.dart';
 import 'notification_service.dart';
 import 'notification_schedule_preferences.dart';
 
@@ -46,7 +45,6 @@ void callbackDispatcher() {
       final orchestrator = NotificationOrchestrator(
         db: db,
         notificationService: NotificationService(db),
-        callLogService: CallLogService(db),
         schedule: schedule,
       );
 
@@ -65,7 +63,6 @@ void callbackDispatcher() {
 class NotificationOrchestrator {
   final AppDatabase db;
   final NotificationService notificationService;
-  final CallLogService callLogService;
   final NotificationSchedule schedule;
 
   final int maxDailyNudges;
@@ -73,13 +70,11 @@ class NotificationOrchestrator {
   NotificationOrchestrator({
     required this.db,
     required this.notificationService,
-    required this.callLogService,
     this.maxDailyNudges = 3,
     this.schedule = const NotificationSchedule(),
   });
 
   Future<void> runDailyCheck() async {
-    await callLogService.syncCallLogs();
     await notificationService.init();
 
     final now = DateTime.now();

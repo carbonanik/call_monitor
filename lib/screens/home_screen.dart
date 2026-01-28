@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../providers/database_provider.dart';
 import '../database/database.dart';
-import '../services/call_log_service.dart';
 import 'package:call_monitor/services/notification_service.dart';
 import 'package:drift/drift.dart' as drift;
 import 'settings_screen.dart';
@@ -35,19 +34,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _syncLogs() async {
     final db = ref.read(databaseProvider);
-    final callLogService = CallLogService(db);
     final notificationService = NotificationService(db);
 
     // Request notification permission for Android 13+
     await notificationService.requestPermission();
 
-    await callLogService.syncCallLogs();
-
     ref.invalidate(trackedContactsStreamProvider);
-
-    // After syncing, check if any notifications should be triggered
-    // final contacts = await db.getAllTrackedContacts();
-    // await notificationService.checkAndNotify(contacts);
   }
 
   void _onItemTapped(int index) {
@@ -107,7 +99,7 @@ class HomeContent extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.sync_rounded),
             onPressed: onSync,
-            tooltip: 'Sync Call Logs',
+            tooltip: 'Refresh',
           ),
           IconButton(
             icon: const Icon(Icons.person_add),
@@ -519,9 +511,17 @@ class _ContactListItemState extends ConsumerState<ContactListItem> {
                     );
 
                     try {
+                      // Launch dialer
                       await launchUrl(
                         uri,
                         mode: LaunchMode.externalApplication,
+                      );
+
+                      // Mark as called immediately (manual tracking approach)
+                      final db = ref.read(databaseProvider);
+                      await db.updateTrackedContact(
+                        contact.copyWith(
+                            lastCalled: drift.Value(DateTime.now())),
                       );
                     } catch (e) {
                       print('Failed to launch dialer: $e');

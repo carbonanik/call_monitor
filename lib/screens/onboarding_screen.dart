@@ -17,7 +17,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   void _nextPage() {
-    if (_currentPage < 5) {
+    if (_currentPage < 4) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -40,18 +40,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No problem — you can enable this later in Settings.'),
-        ),
-      );
-    }
-    _nextPage();
-  }
-
-  Future<void> _requestCallLogPermission() async {
-    final status = await Permission.phone.request();
-    if (status.isDenied && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('App still works! You can manually mark as called.'),
         ),
       );
     }
@@ -83,7 +71,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             _buildHowItWorksScreen(),
             _buildYourControlScreen(),
             _buildContactsPermissionScreen(),
-            _buildCallLogPermissionScreen(),
             _buildNotificationPermissionScreen(),
           ],
         ),
@@ -232,16 +219,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'We use your contacts so you can easily select the people you want to stay connected with.\n\nWe only read names and numbers — nothing is stored online.',
       buttonText: '👉 Allow contacts',
       onPressed: _requestContactsPermission,
-    );
-  }
-
-  Widget _buildCallLogPermissionScreen() {
-    return _buildPermissionBase(
-      title: 'Stay accurate, without manual work',
-      description:
-          'We check your call history so we don’t remind you to call someone you already spoke to.\n\nWe never record calls.\nWe only check when a call happened.',
-      buttonText: '👉 Allow call access',
-      onPressed: _requestCallLogPermission,
     );
   }
 
