@@ -1,4 +1,4 @@
-package com.example.call_monitor
+package com.justcall.app
 
 import io.flutter.embedding.android.FlutterActivity
 

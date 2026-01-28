@@ -55,6 +55,9 @@ void callbackDispatcher() {
     } catch (e) {
       debugPrint("Workmanager: Error in background task: $e");
       return Future.value(false);
+      // Workmanager: Error in background task: PlatformException(PermissionHandler.PermissionManager, Unable to detect current Android Activity., null, null)
+      // This error will be thrown when the app is not in the foreground and the background task is trying to request permissions.
+      // If permission already granted, no error will be thrown.
     }
   });
 }
