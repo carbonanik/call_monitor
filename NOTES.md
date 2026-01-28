@@ -23,3 +23,4 @@ It takes just one call.
 - Show a hitmap of call over month/year
 - Show a graph that indicate call frequency over time
     (User can understand that he/she is improving or not)
+- Can set my available time slot (which time preode im free)
