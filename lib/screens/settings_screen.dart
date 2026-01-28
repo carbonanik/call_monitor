@@ -1,3 +1,4 @@
+import 'package:call_monitor/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -15,6 +16,17 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          _buildSectionHeader('Notifications'),
+          _buildListTile(
+            context,
+            icon: Icons.schedule_outlined,
+            title: 'Notification Schedule',
+            subtitle: 'Customize when you receive reminders',
+            onTap: () {
+              Navigator.of(context).pushNamed('/notification-schedule');
+            },
+          ),
+          const SizedBox(height: 32),
           _buildSectionHeader('Management'),
           _buildListTile(
             context,
@@ -24,20 +36,23 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.of(context).pushNamed('/manage-reminders');
             },
           ),
-          // _buildListTile(
-          //   context,
-          //   icon: Icons.bug_report_outlined,
-          //   title: 'Send Test Notification',
-          //   onTap: () async {
-          //     final db = ref.read(databaseProvider);
-          //     await NotificationService(db).sendTestNotification();
-          //     if (context.mounted) {
-          //       ScaffoldMessenger.of(context).showSnackBar(
-          //         const SnackBar(content: Text('Test notification sent!')),
-          //       );
-          //     }
-          //   },
-          // ),
+          // for testing purposes
+          if (false)
+            // ignore: dead_code
+            _buildListTile(
+              context,
+              icon: Icons.bug_report_outlined,
+              title: 'Send Test Notification',
+              onTap: () async {
+                final db = ref.read(databaseProvider);
+                await NotificationService(db).sendTestNotification();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Test notification sent!')),
+                  );
+                }
+              },
+            ),
           _buildListTile(
             context,
             icon: Icons.delete_outline_rounded,
@@ -150,18 +165,33 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildListTile(BuildContext context,
-      {required IconData icon,
-      required String title,
-      required VoidCallback onTap,
-      Color? textColor}) {
+  Widget _buildListTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required VoidCallback onTap,
+    Color? textColor,
+  }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: textColor ?? AppTheme.textColor),
-      title: Text(title,
-          style: TextStyle(
-              color: textColor ?? AppTheme.textColor,
-              fontWeight: FontWeight.w500)),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: textColor ?? AppTheme.textColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppTheme.textColor.withValues(alpha: 0.6),
+              ),
+            )
+          : null,
       trailing:
           const Icon(Icons.chevron_right, color: AppTheme.secondaryTextColor),
       onTap: onTap,

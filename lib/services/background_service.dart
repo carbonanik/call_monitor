@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 import '../database/database.dart';
 import 'call_log_service.dart';
 import 'notification_service.dart';
+import 'notification_schedule_preferences.dart';
 
 const syncTask = "com.justcall.sync_and_notify";
 
@@ -13,10 +14,40 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     final db = AppDatabase.instance;
     try {
+      // Load custom schedule from preferences
+      final morningWindow =
+          await NotificationSchedulePreferences.getMorningWindow();
+      final daytimeWindow =
+          await NotificationSchedulePreferences.getDaytimeWindow();
+      final eveningWindow =
+          await NotificationSchedulePreferences.getEveningWindow();
+
+      final schedule = NotificationSchedule(
+        morning: TimeWindow(
+          morningWindow.startHour,
+          morningWindow.startMinute,
+          morningWindow.endHour,
+          morningWindow.endMinute,
+        ),
+        daytime: TimeWindow(
+          daytimeWindow.startHour,
+          daytimeWindow.startMinute,
+          daytimeWindow.endHour,
+          daytimeWindow.endMinute,
+        ),
+        evening: TimeWindow(
+          eveningWindow.startHour,
+          eveningWindow.startMinute,
+          eveningWindow.endHour,
+          eveningWindow.endMinute,
+        ),
+      );
+
       final orchestrator = NotificationOrchestrator(
         db: db,
         notificationService: NotificationService(db),
         callLogService: CallLogService(db),
+        schedule: schedule,
       );
 
       await orchestrator.runDailyCheck();

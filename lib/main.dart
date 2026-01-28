@@ -1,5 +1,6 @@
 import 'package:call_monitor/gen/assets.gen.dart';
 import 'package:call_monitor/screens/about_screen.dart';
+import 'package:call_monitor/screens/notification_schedule_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
@@ -43,6 +44,8 @@ class JustCallApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/select-contacts': (context) => const ContactSelectionScreen(),
         '/manage-reminders': (context) => const ManageRemindersScreen(),
+        '/notification-schedule': (context) =>
+            const NotificationScheduleScreen(),
         '/about': (context) => const AboutScreen(),
       },
     );
