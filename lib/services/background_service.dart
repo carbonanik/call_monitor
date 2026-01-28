@@ -32,6 +32,7 @@ class NotificationOrchestrator {
   final AppDatabase db;
   final NotificationService notificationService;
   final CallLogService callLogService;
+  final NotificationSchedule schedule;
 
   final int maxDailyNudges;
 
@@ -40,6 +41,7 @@ class NotificationOrchestrator {
     required this.notificationService,
     required this.callLogService,
     this.maxDailyNudges = 3,
+    this.schedule = const NotificationSchedule(),
   });
 
   Future<void> runDailyCheck() async {
@@ -67,7 +69,7 @@ class NotificationOrchestrator {
   Future<void> _handleMorningSummary(
       DateTime now, NotificationStat stats) async {
     if (stats.morningSent) return;
-    if (!_isInWindow(now, 8, 30, 9, 30)) return;
+    if (!schedule.morning.contains(now)) return;
 
     final overdue = await _getOverdueContacts(now);
     if (overdue.isNotEmpty) {
@@ -78,7 +80,7 @@ class NotificationOrchestrator {
 
   Future<void> _handleDaytimeNudge(DateTime now, NotificationStat stats) async {
     if (stats.dayNudgesCount >= maxDailyNudges || !stats.morningSent) return;
-    if (!_isInWindow(now, 11, 0, 18, 0)) return;
+    if (!schedule.daytime.contains(now)) return;
 
     if (await db.hasUserMadeCallsToday()) {
       // Mark as done (max out the count) for today to prevent multiple checks
@@ -98,18 +100,11 @@ class NotificationOrchestrator {
 
   Future<void> _handleEveningReflection(
       DateTime now, NotificationStat stats) async {
-    if (stats.eveningSent || !_isInWindow(now, 20, 0, 21, 0)) return;
+    if (stats.eveningSent || !schedule.evening.contains(now)) return;
 
     final hasCalledToday = await db.hasUserMadeCallsToday();
     await notificationService.showEveningReflection(hasCalledToday);
     await _updateStats(stats.date, eveningSent: true);
-  }
-
-  bool _isInWindow(DateTime now, int startH, int startM, int endH, int endM) {
-    final start = startH * 60 + startM;
-    final end = endH * 60 + endM;
-    final currentTime = now.hour * 60 + now.minute;
-    return currentTime >= start && currentTime <= end;
   }
 
   Future<List<TrackedContact>> _getOverdueContacts(DateTime now) async {
@@ -150,6 +145,35 @@ class NotificationOrchestrator {
           : const drift.Value.absent(),
     ));
   }
+}
+
+class TimeWindow {
+  final int startHour;
+  final int startMinute;
+  final int endHour;
+  final int endMinute;
+
+  const TimeWindow(
+      this.startHour, this.startMinute, this.endHour, this.endMinute);
+
+  bool contains(DateTime time) {
+    final start = startHour * 60 + startMinute;
+    final end = endHour * 60 + endMinute;
+    final currentTime = time.hour * 60 + time.minute;
+    return currentTime >= start && currentTime <= end;
+  }
+}
+
+class NotificationSchedule {
+  final TimeWindow morning;
+  final TimeWindow daytime;
+  final TimeWindow evening;
+
+  const NotificationSchedule({
+    this.morning = const TimeWindow(8, 30, 9, 30),
+    this.daytime = const TimeWindow(11, 0, 18, 0),
+    this.evening = const TimeWindow(20, 0, 21, 0),
+  });
 }
 
 class BackgroundService {

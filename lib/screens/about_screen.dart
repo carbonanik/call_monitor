@@ -45,7 +45,8 @@ class AboutScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 launchUrl(
-                  Uri.parse('https://your-privacy-policy-link.com'),
+                  Uri.parse(
+                      'https://docs.google.com/forms/d/e/1FAIpQLSfhTYnco6UuMitLYWlkAxNc-4VuWmQXLl1D1xzvXs-O7rNuYQ/viewform?usp=dialog'),
                 );
               },
               child: const Text('Privacy & Trust'),

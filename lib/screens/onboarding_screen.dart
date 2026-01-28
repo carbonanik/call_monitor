@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../core/theme.dart';
 import '../components/gradient_button.dart';
+import '../services/onboarding_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -22,6 +23,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
+      _completeOnboarding();
+    }
+  }
+
+  Future<void> _completeOnboarding() async {
+    await OnboardingService.completeOnboarding();
+    if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
     }
   }
@@ -52,6 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _requestNotificationPermission() async {
     await Permission.notification.request();
+    await OnboardingService.completeOnboarding();
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
     }

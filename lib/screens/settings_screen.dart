@@ -4,7 +4,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../providers/database_provider.dart';
-import '../services/notification_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -25,20 +24,20 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.of(context).pushNamed('/manage-reminders');
             },
           ),
-          _buildListTile(
-            context,
-            icon: Icons.bug_report_outlined,
-            title: 'Send Test Notification',
-            onTap: () async {
-              final db = ref.read(databaseProvider);
-              await NotificationService(db).sendTestNotification();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Test notification sent!')),
-                );
-              }
-            },
-          ),
+          // _buildListTile(
+          //   context,
+          //   icon: Icons.bug_report_outlined,
+          //   title: 'Send Test Notification',
+          //   onTap: () async {
+          //     final db = ref.read(databaseProvider);
+          //     await NotificationService(db).sendTestNotification();
+          //     if (context.mounted) {
+          //       ScaffoldMessenger.of(context).showSnackBar(
+          //         const SnackBar(content: Text('Test notification sent!')),
+          //       );
+          //     }
+          //   },
+          // ),
           _buildListTile(
             context,
             icon: Icons.delete_outline_rounded,
@@ -101,7 +100,7 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () {
               launchUrl(
                 Uri.parse(
-                  'mailto:support@justcall.app?subject=Just Call App Feedback',
+                  'mailto:sheikhanikbd@gmail.com?subject=Just Call App Feedback',
                 ),
               );
             },
@@ -112,7 +111,8 @@ class SettingsScreen extends ConsumerWidget {
             title: 'Privacy Policy',
             onTap: () {
               launchUrl(
-                Uri.parse('https://your-privacy-policy-link.com'),
+                Uri.parse(
+                    'https://docs.google.com/forms/d/e/1FAIpQLSfhTYnco6UuMitLYWlkAxNc-4VuWmQXLl1D1xzvXs-O7rNuYQ/viewform?usp=dialog'),
                 mode: LaunchMode.externalApplication,
               );
             },
